@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>雞蛋糕小姐｜線上訂餐</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, "Microsoft JhengHei", sans-serif;
+    background: #fff8f5;
+    color: #5b4030;
+}
+
+.container {
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+}
+
+.logo {
+    width: 150px;
+    height: 150px;
+    object-fit: contain;
+    display: block;
+    margin: 10px auto;
+}
+
+h1 {
+    text-align: center;
+    margin: 5px 0;
+    font-size: 30px;
+}
+
+.subtitle {
+    text-align: center;
+    font-size: 20px;
+    margin-bottom: 35px;
+}
+
+.choose {
+    text-align: center;
+    font-size: 18px;
+    margin-bottom: 20px;
+}
+
+.store-button,
+.main-button {
+    width: 100%;
+    padding: 20px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 18px;
+    background: white;
+    color: #5b4030;
+    font-size: 20px;
+    font-weight: bold;
+    box-shadow: 0 3px 12px rgba(120,80,50,0.15);
+}
+
+.main-button {
+    background: #d9907b;
+    color: white;
+}
+
+.back-button {
+    border: none;
+    background: none;
+    color: #8b6a58;
+    font-size: 17px;
+    padding: 5px 0 15px;
+}
+
+.store-title {
+    text-align: center;
+    font-size: 24px;
+    margin: 15px 0 25px;
+}
+
+.product {
+    background: white;
+    border-radius: 15px;
+    padding: 15px;
+    margin: 10px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(120,80,50,0.08);
+}
+
+.product-name {
+    font-size: 17px;
+}
+
+.price {
+    margin-top: 5px;
+    color: #a66b4f;
+}
+
+.quantity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.quantity button {
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 50%;
+    background: #f5d8ce;
+    color: #5b4030;
+    font-size: 20px;
+}
+
+.number {
+    min-width: 20px;
+    text-align: center;
+}
+
+.total {
+    margin-top: 20px;
+    padding: 18px;
+    border-radius: 15px;
+    background: #f9e5de;
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.section {
+    background: white;
+    border-radius: 15px;
+    padding: 18px;
+    margin: 15px 0;
+    box-shadow: 0 2px 8px rgba(120,80,50,0.08);
+}
+
+.section-title {
+    font-size: 19px;
+    font-weight: bold;
+    margin-bottom: 12px;
+}
+
+input,
+textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 13px;
+    border: 1px solid #ead5cc;
+    border-radius: 10px;
+    font-size: 16px;
+    font-family: inherit;
+    background: #fffdfc;
+}
+
+textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
+.summary-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #f1e4df;
+}
+
+.summary-total {
+    text-align: right;
+    font-size: 21px;
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+.success {
+    text-align: center;
+    font-size: 21px;
+    line-height: 1.7;
+    padding: 30px 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- 首頁 -->
+<div id="homePage">
+
+    <img src="logo.jpeg" class="logo">
+
+    <h1>雞蛋糕小姐</h1>
+
+    <div class="subtitle">
+        線上訂餐
+    </div>
+
+    <div class="choose">
+        請選擇取餐店家
+    </div>
+
+    <button class="store-button" onclick="openStore('九如店')">
+        🏪 九如店
+    </button>
+
+    <button class="store-button" onclick="openStore('繁華店')">
+        🏪 繁華店
+    </button>
+
+</div>
+
+
+<!-- 菜單 -->
+<div id="menuPage" style="display:none;">
+
+    <button class="back-button" onclick="backHome()">
+        ← 回選店家
+    </button>
+
+    <img src="logo.jpeg" class="logo">
+
+    <h1>雞蛋糕小姐</h1>
+
+    <div id="storeTitle" class="store-title"></div>
+
+    <div id="products"></div>
+
+    <div class="total">
+        總金額：$<span id="total">0</span>
+    </div>
+
+    <button class="main-button" onclick="goToOrder()">
+        確認訂單
+    </button>
+
+</div>
+
+
+<!-- 取餐資料 -->
+<div id="orderPage" style="display:none;">
+
+    <button class="back-button" onclick="backToMenu()">
+        ← 回菜單
+    </button>
+
+    <img src="logo.jpeg" class="logo">
+
+    <h1>確認訂單</h1>
+
+    <div class="section">
+
+        <div class="section-title">
+            🏪 取餐店家
+        </div>
+
+        <div id="orderStore"></div>
+
+    </div>
+
+
+    <div class="section">
+
+        <div class="section-title">
+            ⏰ 取餐時間
+        </div>
+
+        <input
+            type="time"
+            id="pickupTime"
+        >
+
+    </div>
+
+
+    <div class="section">
+
+        <div class="section-title">
+            📝 備註
+        </div>
+
+        <textarea
+            id="note"
+            placeholder="有其他需求可以寫在這裡（選填）"
+        ></textarea>
+
+    </div>
+
+
+    <div class="section">
+
+        <div class="section-title">
+            🛒 訂購內容
+        </div>
+
+        <div id="orderSummary"></div>
+
+        <div class="summary-total">
+            總金額：$<span id="orderTotal">0</span>
+        </div>
+
+    </div>
+
+
+    <button class="main-button" onclick="confirmOrder()">
+        送出訂單
+    </button>
+
+</div>
+
+
+<!-- 完成 -->
+<div id="successPage" style="display:none;">
+
+    <img src="logo.jpeg" class="logo">
+
+    <div class="success">
+
+        🎉<br>
+
+      <!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>雞蛋糕小姐｜線上訂餐</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, "Microsoft JhengHei", sans-serif;
+    background: #fff8f5;
+    color: #5b4030;
+}
+
+.container {
+    max-width: 600px;
+    margin: auto;
+    padding: 20px;
+}
+
+.logo {
+    width: 150px;
+    height: 150px;
+    object-fit: contain;
+    display: block;
+    margin: 10px auto;
+}
+
+h1 {
+    text-align: center;
+    margin: 5px 0;
+    font-size: 30px;
+}
+
+.subtitle {
+    text-align: center;
+    font-size: 20px;
+    margin-bottom: 35px;
+}
+
+.choose {
+    text-align: center;
+    font-size: 18px;
+    margin-bottom: 20px;
+}
+
+.store-button,
+.main-button {
+    width: 100%;
+    padding: 20px;
+    margin: 10px 0;
+    border: none;
+    border-radius: 18px;
+    background: white;
+    color: #5b4030;
+    font-size: 20px;
+    font-weight: bold;
+    box-shadow: 0 3px 12px rgba(120,80,50,0.15);
+}
+
+.main-button {
+    background: #d9907b;
+    color: white;
+}
+
+.back-button {
+    border: none;
+    background: none;
+    color: #8b6a58;
+    font-size: 17px;
+    padding: 5px 0 15px;
+}
+
+.store-title {
+    text-align: center;
+    font-size: 24px;
+    margin: 15px 0 25px;
+}
+
+.product {
+    background: white;
+    border-radius: 15px;
+    padding: 15px;
+    margin: 10px 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 8px rgba(120,80,50,0.08);
+}
+
+.product-name {
+    font-size: 17px;
+}
+
+.price {
+    margin-top: 5px;
+    color: #a66b4f;
+}
+
+.quantity {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.quantity button {
+    width: 34px;
+    height: 34px;
+    border: none;
+    border-radius: 50%;
+    background: #f5d8ce;
+    color: #5b4030;
+    font-size: 20px;
+}
+
+.number {
+    min-width: 20px;
+    text-align: center;
+}
+
+.total {
+    margin-top: 20px;
+    padding: 18px;
+    border-radius: 15px;
+    background: #f9e5de;
+    text-align: center;
+    font-size: 22px;
+    font-weight: bold;
+}
+
+.section {
+    background: white;
+    border-radius: 15px;
+    padding: 18px;
+    margin: 15px 0;
+    box-shadow: 0 2px 8px rgba(120,80,50,0.08);
+}
+
+.section-title {
+    font-size: 19px;
+    font-weight: bold;
+    margin-bottom: 12px;
+}
+
+input,
+textarea {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 13px;
+    border: 1px solid #ead5cc;
+    border-radius: 10px;
+    font-size: 16px;
+    font-family: inherit;
+    background: #fffdfc;
+}
+
+textarea {
+    min-height: 90px;
+    resize: vertical;
+}
+
+.summary-item {
+    padding: 8px 0;
+    border-bottom: 1px solid #f1e4df;
+}
+
+.summary-total {
+    text-align: right;
+    font-size: 21px;
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+.success {
+    text-align: center;
+    font-size: 21px;
+    line-height: 1.7;
+    padding: 30px 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+<!-- 首頁 -->
+<div id="homePage">
+
+    <img src="logo.jpeg" class="logo">
+
+    <h1>雞蛋糕小姐</h1>
+
+    <div class="subtitle">
+        線上訂餐
+    </div>
+
+    <div class="choose">
+        請選擇取餐店家
+    </div>
+
+    <button class="store-button" onclick="openStore('九如店')">
+        🏪 九如店
+    </button>
+
+    <button class="store-button" onclick="openStore('繁華店')">
+        🏪 繁華店
+    </button>
+
+</div>
+
+
+<!-- 菜單 -->
+<div id="menuPage" style="display:none;">
+
+    <button class="back-button" onclick="backHome()">
+        ← 回選店家
+    </button>
+
+    <img src="logo.jpeg" class="logo">
+
+    <h1>雞蛋糕小姐</h1>
+
+    <div id="storeTitle" class="store-title"></div>
+
+    <div id="products"></div>
+
+    <div class="total">
+        總金額：$<span id="total">0</span>
+    </div>
+
+    <button class="main-button" onclick="goToOrder()">
+        確認訂單
+    </button>
+
+</div>
+
+
+<!-- 取餐資料 -->
+<div id="orderPage" style="display:none;">
+
+    <button class="back-button" onclick="backToMenu()">
+        ← 回菜單
+    </button>
+
+    <img src="logo.jpeg" class="logo">
+
+    <h1>確認訂單</h1>
+
+    <div class="section">
+
+        <div class="section-title">
+            🏪 取餐店家
+        </div>
+
+        <div id="orderStore"></div>
+
+    </div>
+
+
+    <div class="section">
+
+        <div class="section-title">
+            ⏰ 取餐時間
+        </div>
+
+        <input
+            type="time"
+            id="pickupTime"
+        >
+
+    </div>
+
+
+    <div class="section">
+
+        <div class="section-title">
+            📝 備註
+        </div>
+
+        <textarea
+            id="note"
+            placeholder="有其他需求可以寫在這裡（選填）"
+        ></textarea>
+
+    </div>
+
+
+    <div class="section">
+
+        <div class="section-title">
+            🛒 訂購內容
+        </div>
+
+        <div id="orderSummary"></div>
+
+        <div class="summary-total">
+            總金額：$<span id="orderTotal">0</span>
+        </div>
+
+    </div>
+
+
+    <button class="main-button" onclick="confirmOrder()">
+        送出訂單
+    </button>
+
+</div>
+
+
+<!-- 完成 -->
+<div id="successPage" style="display:none;">
+
+    <img src="logo.jpeg" class="logo">
+
+    <div class="success">
+
+        🎉<br>
+訂單已送出！
+
+        <br><br>
+
+        <span id="successStore"></span>
+
+        <br>
+
+        <span id="successTime"></span>
+
+        <br><br>
+
+        謝謝您的訂購 ❤️
+
+    </div>
+
+</div>
+
+</div>
+
+<script>
+
+const menu = [
+
+    ["原味", 50],
+
+    ["黑糖麻糬", 60],
+
+    ["卡士達奶油", 60],
+
+    ["卡士達巧克力", 60],
+
+    ["戀愛草莓", 60],
+
+    ["果香藍莓", 60],
+
+    ["好事花生", 60],
+
+    ["萬丹紅豆", 60],
+
+    ["奶香芋泥", 60],
+
+    ["手作奶酥", 70],
+
+    ["OREO餅乾", 70],
+
+    ["黃金起司", 70],
+
+    ["拉絲起司", 70],
+
+    ["黑糖Q奶", 70],
+
+    ["玉米起司", 80],
+
+    ["雙重起司", 80],
+
+    ["起司芋泥", 80],
+
+    ["德腸起司", 80]
+
+];
+
+let currentStore = "";
+
+let quantities = [];
+
+function openStore(store) {
+
+    currentStore = store;
+
+    quantities = menu.map(() => 0);
+
+    document.getElementById("homePage").style.display = "none";
+
+    document.getElementById("menuPage").style.display = "block";
+
+    document.getElementById("storeTitle").innerText =
+
+        store + "｜菜單";
+
+    showProducts();
+
+    window.scrollTo(0, 0);
+
+}
+
+function showProducts() {
+
+    const products = document.getElementById("products");
+
+    products.innerHTML = "";
+
+    menu.forEach((item, index) => {
+
+        const div = document.createElement("div");
+
+        div.className = "product";
+
+        div.innerHTML = `
+
+            <div>
+
+                <div class="product-name">
+
+                    ${item[0]}
+
+                </div>
+
+                <div class="price">
+
+                    $${item[1]}
+
+                </div>
+
+            </div>
+
+            <div class="quantity">
+
+                <button onclick="changeQuantity(${index}, -1)">
+
+                    −
+
+                </button>
+
+                <span class="number">
+
+                    ${quantities[index]}
+
+                </span>
+
+                <button onclick="changeQuantity(${index}, 1)">
+
+                    +
+
+                </button>
+
+            </div>
+
+        `;
+
+        products.appendChild(div);
+
+    });
+
+    updateTotal();
+
+}
+
+function changeQuantity(index, change) {
+
+    quantities[index] += change;
+
+    if (quantities[index] < 0) {
+
+        quantities[index] = 0;
+
+    }
+
+    showProducts();
+
+}
+
+function getTotal() {
+
+    let total = 0;
+
+    menu.forEach((item, index) => {
+
+        total += item[1] * quantities[index];
+
+    });
+
+    return total;
+
+}
+
+function updateTotal() {
+
+    document.getElementById("total").innerText =
+
+        getTotal();
+
+}
+
+function goToOrder() {
+
+    if (getTotal() === 0) {
+
+        alert("請先選擇雞蛋糕數量！");
+
+        return;
+
+    }
+
+    document.getElementById("menuPage").style.display = "none";
+
+    document.getElementById("orderPage").style.display = "block";
+
+    document.getElementById("orderStore").innerText =
+
+        currentStore;
+
+    document.getElementById("orderTotal").innerText =
+
+        getTotal();
+
+    createOrderSummary();
+
+    window.scrollTo(0, 0);
+
+}
+
+function createOrderSummary() {
+
+    const summary =
+
+        document.getElementById("orderSummary");
+
+    summary.innerHTML = "";
+
+    menu.forEach((item, index) => {
+
+        if (quantities[index] > 0) {
+
+            const div =
+
+                document.createElement("div");
+
+            div.className = "summary-item";
+
+            div.innerText =
+
+                item[0] +
+
+                " × " +
+
+                quantities[index] +
+
+                "　$" +
+
+                (item[1] * quantities[index]);
+
+            summary.appendChild(div);
+
+        }
+
+    });
+
+}
+
+function confirmOrder() {
+
+    const time =
+
+        document.getElementById("pickupTime").value;
+
+    if (!time) {
+
+        alert("請選擇取餐時間！");
+
+        return;
+
+    }
+
+    document.getElementById("orderPage").style.display =
+
+        "none";
+
+    document.getElementById("successPage").style.display =
+
+        "block";
+
+    document.getElementById("successStore").innerText =
+
+        "取餐店家：" + currentStore;
+
+    document.getElementById("successTime").innerText =
+
+        "取餐時間：" + time;
+
+    window.scrollTo(0, 0);
+
+}
+
+function backHome() {
+
+    document.getElementById("menuPage").style.display =
+
+        "none";
+
+    document.getElementById("homePage").style.display =
+
+        "block";
+
+    window.scrollTo(0, 0);
+
+}
+
+function backToMenu() {
+
+    document.getElementById("orderPage").style.display =
+
+        "none";
+
+    document.getElementById("menuPage").style.display =
+
+        "block";
+
+    window.scrollTo(0, 0);
+}
+
+</script>
+
+</body>
+
+</html>      
