@@ -886,70 +886,74 @@ function createOrderSummary() {
     });
 
 }
-
-function confirmOrder() {
+async function confirmOrder() {
 
     const time =
-
         document.getElementById("pickupTime").value;
 
+    const note =
+        document.getElementById("note").value;
+
     if (!time) {
-
         alert("請選擇取餐時間！");
-
         return;
+    }
+
+    let items = [];
+
+    menu.forEach((item, index) => {
+
+        if (quantities[index] > 0) {
+
+            items.push(
+                item[0] + " × " + quantities[index]
+            );
+
+        }
+
+    });
+
+    const orderData = {
+
+        store: currentStore,
+        pickupTime: time,
+        items: items.join("、"),
+        total: getTotal(),
+        note: note
+
+    };
+
+    try {
+
+        await fetch(
+            "https://script.google.com/macros/s/AKfycbwnaQdAagWKH9pwg9OWMVy9ML1_aQJnPaRhUbxFdZyXJhmzSnDIEjMovFId7ZDg7AfN/exec",
+            {
+                method: "POST",
+                mode: "no-cors",
+                body: JSON.stringify(orderData)
+            }
+        );
+
+        document.getElementById("orderPage").style.display =
+            "none";
+
+        document.getElementById("successPage").style.display =
+            "block";
+
+        document.getElementById("successStore").innerText =
+            "取餐店家：" + currentStore;
+
+        document.getElementById("successTime").innerText =
+            "取餐時間：" + time;
+
+        window.scrollTo(0, 0);
+
+    } catch (error) {
+
+        alert("訂單送出失敗，請稍後再試！");
+
+        console.error(error);
 
     }
 
-    document.getElementById("orderPage").style.display =
-
-        "none";
-
-    document.getElementById("successPage").style.display =
-
-        "block";
-
-    document.getElementById("successStore").innerText =
-
-        "取餐店家：" + currentStore;
-
-    document.getElementById("successTime").innerText =
-
-        "取餐時間：" + time;
-
-    window.scrollTo(0, 0);
-
-}
-
-function backHome() {
-
-    document.getElementById("menuPage").style.display =
-
-        "none";
-
-    document.getElementById("homePage").style.display =
-
-        "block";
-
-    window.scrollTo(0, 0);
-
-}
-
-function backToMenu() {
-
-    document.getElementById("orderPage").style.display =
-
-        "none";
-
-    document.getElementById("menuPage").style.display =
-
-        "block";
-
-    window.scrollTo(0, 0);
-}
-
-</script>
-
-</body>
-
-</html>      
+                }
