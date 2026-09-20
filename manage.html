@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="zh-Hant">
 
@@ -171,8 +170,9 @@ button {
         >
 
         <button
+            type="button"
             class="login-button"
-            onclick="login()"
+            id="loginButton"
         >
             登入
         </button>
@@ -184,8 +184,9 @@ button {
     <div id="adminPage" class="hidden">
 
         <button
+            type="button"
             class="logout"
-            onclick="logout()"
+            id="logoutButton"
         >
             登出
         </button>
@@ -195,8 +196,9 @@ button {
         <br>
 
         <button
+            type="button"
             class="refresh"
-            onclick="loadOrders()"
+            id="refreshButton"
         >
             🔄 重新整理
         </button>
@@ -225,6 +227,7 @@ const supabaseClient =
 
 let lastOrderSignature = null;
 let firstLoad = true;
+let currentOrders = [];
 
 
 /* 登入 */
@@ -232,10 +235,13 @@ let firstLoad = true;
 async function login() {
 
     const email =
-        document.getElementById("email").value.trim();
+        document.getElementById("email")
+        .value
+        .trim();
 
     const password =
-        document.getElementById("password").value;
+        document.getElementById("password")
+        .value;
 
     const message =
         document.getElementById("loginMessage");
@@ -248,16 +254,31 @@ async function login() {
         return;
     }
 
-    const { error } =
-        await supabaseClient.auth.signInWithPassword({
-            email: email,
-            password: password
-        });
+    message.innerText =
+        "登入中...";
+
+    try {
+
+        const { data, error } =
+            await supabaseClient.auth
+            .signInWithPassword({
+                email: email,
+                password: password
+            });
 
     if (error) {
 
         message.innerText =
-            "登入失敗：" + error.message;
+            "登入失敗：" +
+            error.message;
+
+        return;
+    }
+
+    if (!data.session) {
+
+        message.innerText =
+            "登入失敗，沒有取得登入狀態";
 
         return;
     }
@@ -268,11 +289,23 @@ async function login() {
     document.getElementById("adminPage")
         .classList.remove("hidden");
 
+    message.innerText = "";
+
     loadOrders();
+
+    }
+
+    catch (error) {
+
+        message.innerText =
+            "登入發生錯誤：" +
+            error.message;
+
+    }
+
 }
 
-
-/* 登出 */
+    /* 登出 */
 
 async function logout() {
 
@@ -284,6 +317,11 @@ async function logout() {
     document.getElementById("loginPage")
         .classList.remove("hidden");
 
+    document.getElementById("password")
+        .value = "";
+
+    firstLoad = true;
+    lastOrderSignature = null;
 }
 
 
@@ -297,175 +335,196 @@ async function loadOrders() {
     ordersDiv.innerHTML =
         "<div class='empty'>載入訂單中...</div>";
 
-    const { data, error } =
-        await supabaseClient
-        .from("orders2")
-        .select("*")
-        .order("pickup_time", {
-            ascending: false
-        });
+    try {
 
-    if (error) {
+        const { data, error } =
+            await supabaseClient
+            .from("orders2")
+            .select("*")
+            .order(
+                "pickup_time",
+                {
+                    ascending: false
+                }
+            );
+
+        if (error) {
+
+            ordersDiv.innerHTML =
+                "<div class='empty'>" +
+                "讀取訂單失敗<br><br>" +
+                error.message +
+                "</div>";
+
+            return;
+        }
+
+        if (!data || data.length === 0) {
+
+            ordersDiv.innerHTML =
+                "<div class='empty'>" +
+                "目前沒有訂單" +
+                "</div>";
+
+            currentOrders = [];
+
+            return;
+        }
+
+        currentOrders = data;
+
+        const newestOrder = data[0];
+
+        const orderSignature =
+            [
+                newestOrder.pickup_time || "",
+                newestOrder.phone || "",
+                newestOrder.order_items || "",
+                newestOrder.total || "",
+                newestOrder.note || ""
+            ].join("|");
+
+        if (
+            !firstLoad &&
+            lastOrderSignature !== null &&
+            orderSignature !== lastOrderSignature
+        ) {
+
+            newOrderAlert();
+
+        }
+
+        lastOrderSignature =
+            orderSignature;
+
+        firstLoad = false;
+
+        ordersDiv.innerHTML = "";
+
+        data.forEach(
+            (order, index) => {
+
+                const div =
+                    document.createElement("div");
+
+                div.className = "order";
+
+                const store =
+                    getStore(order.note);
+
+                const isNew =
+                    order.status === "新訂單";
+
+                div.innerHTML = `
+
+                    <div class="order-title">
+                        🧾 訂單
+                    </div>
+
+                    <div class="store">
+                        🏪 ${store}
+                    </div>
+
+                    <div class="order-info">
+
+                        ⏰ 取餐時間：
+                        ${order.pickup_time || "未填寫"}
+
+                        <br>
+
+                        📞 電話：
+                        ${order.phone || "未填寫"}
+
+                        <br>
+
+                        📝 備註：
+                        ${getNote(order.note)}
+
+                    </div>
+
+                    <div class="items">
+
+                        🛒 訂購內容：
+                        ${order.order_items || ""}
+
+                    </div>
+
+                    <div class="total">
+
+                        💰 $${order.total || 0}
+
+                    </div>
+
+                    <div class="status ${
+                        isNew ? "" : "complete"
+                    }">
+
+                        ${
+                            order.status ||
+                            "新訂單"
+                        }
+
+                    </div>
+
+                    ${
+                        isNew
+                        ?
+                        `
+                        <br>
+
+                        <button
+                            type="button"
+                            class="complete-button"
+                            data-index="${index}"
+                        >
+                            ✅ 已接單
+                        </button>
+                        `
+                        :
+                        ""
+                    }
+
+                `;
+
+                const button =
+                    div.querySelector(
+                        ".complete-button"
+                    );
+
+                if (button) {
+
+                    button.addEventListener(
+                        "click",
+                        function() {
+
+                            const index =
+                                Number(
+                                    this.dataset.index
+                                );
+
+                            completeOrder(index);
+
+                        }
+                    );
+
+                }
+
+                ordersDiv.appendChild(div);
+
+            }
+        );
+
+    }
+
+    catch (error) {
 
         ordersDiv.innerHTML =
-            "<div class='empty'>讀取訂單失敗<br>" +
-            erro.message +
+            "<div class='empty'>" +
+            "讀取訂單失敗<br><br>" +
+            error.message +
             "</div>";
 
-        return;
     }
-
-    if (!data || data.length === 0) {
-
-        ordersDiv.innerHTML =
-            "<div class='empty'>目前沒有訂單</div>";
-
-        return;
-    }
-
-
-    /*
-       用第一筆訂單的內容做辨識，
-       不再使用不存在的 id 欄位
-    */
-
-    const newestOrder = data[0];
-
-    const orderSignature =
-        [
-            newestOrder.pickup_time || "",
-            newestOrder.phone || "",
-            newestOrder.order_items || "",
-            newestOrder.total || "",
-            newestOrder.note || ""
-        ].join("|");
-
-
-    if (
-        !firstLoad &&
-        lastOrderSignature !== null &&
-        orderSignature !== lastOrderSignature
-    ) {
-
-        newOrderAlert();
-
-    }
-
-    lastOrderSignature =
-        orderSignature;
-
-    firstLoad = false;
-
-
-    ordersDiv.innerHTML = "";
-
-
-    data.forEach((order, index) => {
-
-        const div =
-            document.createElement("div");
-
-        div.className = "order";
-
-
-        const store =
-            getStore(order.note)；
-
-
-        const isNew =
-            order.status === "新訂單";
-
-
-        div.innerHTML = `
-
-            <div class="order-title">
-
-                🧾 訂單
-
-            </div>
-
-            <div class="store">
-
-                🏪 ${store}
-
-            </div>
-
-            <div class="order-info">
-
-                ⏰ 取餐時間：
-
-                ${order.pickup_time || "未填寫"}
-
-                <br>
-
-                📞 電話：
-
-                ${order.phone || "未填寫"}
-
-                <br>
-
-                📝 備註：
-
-                ${getNote(order.note)}
-
-            </div>
-
-            <div class="items">
-
-                🛒 訂購內容：
-
-                ${order.order_items || ""}
-
-            </div>
-
-            <div class="total">
-
-                💰 $${order.total || 0}
-
-            </div>
-
-            <div class="status ${isNew ? "" : "complete"}">
-
-                ${order.status || "新訂單"}
-
-            </div>
-
-            ${
-                isNew
-                ?
-                `<br>
-
-                <button
-                    class="complete-button"
-                    onclick="completeOrder(${index})"
-                >
-                    ✅ 已接單
-                </button>`
-                :
-                ""
-            }
-
-        `;
-
-
-        /*
-           暫存這一筆訂單，
-           讓「已接單」知道要更新哪一筆
-        */
-
-        div.dataset.orderIndex = index;
-
-        ordersDiv.appendChild(div);
-
-    });
-
-
-    /*
-       把目前訂單資料暫存在 window，
-       供「已接單」使用
-    */
-
-    window.currentOrders = data;
 
 }
 
@@ -484,38 +543,19 @@ function getStore(note) {
         return "繁華店";
 
     return "未指定";
-
 }
 
 
 /* 顯示備註 */
 
-function getNote(note) {
+funct
 
-    if (!note)
-        return "無";
-
-    const parts =
-        note.split("\n");
-
-    const result =
-        parts
-        .filter(item =>
-            !item.includes("取餐店家：")
-        )
-        .join("\n");
-
-    return result || "無";   
-
-    }
-
-
-/* 已接單 */
+    /* 已接單 */
 
 async function completeOrder(index) {
 
     const order =
-        window.currentOrders[index];
+        currentOrders[index];
 
     if (!order) {
 
@@ -524,19 +564,12 @@ async function completeOrder(index) {
         return;
     }
 
-
-    /*
-       因為目前 orders2 沒有 id，
-       使用這筆訂單的多個欄位一起尋找。
-    */
-
     let query =
         supabaseClient
         .from("orders2")
         .update({
             status: "已接單"
         });
-
 
     if (order.pickup_time) {
 
@@ -548,7 +581,6 @@ async function completeOrder(index) {
 
     }
 
-
     if (order.phone) {
 
         query =
@@ -558,7 +590,6 @@ async function completeOrder(index) {
             );
 
     }
-
 
     if (order.order_items) {
 
@@ -570,10 +601,8 @@ async function completeOrder(index) {
 
     }
 
-
     const { error } =
         await query;
-
 
     if (error) {
 
@@ -584,7 +613,6 @@ async function completeOrder(index) {
 
         return;
     }
-
 
     loadOrders();
 
@@ -608,11 +636,15 @@ function playSound() {
 
     try {
 
+        const AudioContext =
+            window.AudioContext ||
+            window.webkitAudioContext;
+
+        if (!AudioContext)
+            return;
+
         const audioContext =
-            new (
-                window.AudioContext ||
-                window.webkitAudioContext
-            )();
+            new AudioContext();
 
         const oscillator =
             audioContext.createOscillator();
@@ -620,41 +652,37 @@ function playSound() {
         const gain =
             audioContext.createGain();
 
-
         oscillator.connect(gain);
 
         gain.connect(
             audioContext.destination
         );
 
-
         oscillator.frequency.value =
             880;
-
 
         gain.gain.setValueAtTime(
             0.3,
             audioContext.currentTime
         );
 
-
         oscillator.start();
-
 
         gain.gain.exponentialRampToValueAtTime(
             0.01,
             audioContext.currentTime + 0.6
         );
 
-
         oscillator.stop(
             audioContext.currentTime + 0.6
         );
 
-    } catch (e) {
+    }
+
+    catch (error) {
 
         console.log(
-            "無法播放提示音"
+            "提示音播放失敗"
         );
 
     }
@@ -662,26 +690,55 @@ function playSound() {
 }
 
 
+/* 按鈕事件 */
+
+document
+.getElementById("loginButton")
+.addEventListener(
+    "click",
+    login
+);
+
+document
+.getElementById("logoutButton")
+.addEventListener(
+    "click",
+    logout
+);
+
+document
+.getElementById("refreshButton")
+.addEventListener(
+    "click",
+    loadOrders
+);
+
+
 /* 每 5 秒檢查一次 */
 
-setInterval(() => {
+setInterval(
+    async function() {
 
-    supabaseClient.auth
-        .getSession()
-        .then(({ data }) => {
+        const {
+            data
+        } =
+            await supabaseClient.auth
+            .getSession();
 
-            if (data.session) {
+        if (
+            data &&
+            data.session
+        ) {
 
-                loadOrders();
+            loadOrders();
 
-            }
+        }
 
-        });
-
-}, 5000);
+    },
+    5000
+);
 
 </script>
 
 </body>
 </html>
-```
