@@ -444,7 +444,7 @@ async function loadOrders() {
 
         .select("*")
 
-        .order("id", { ascending: false });
+        .order("pickup_time", { ascending: false });
 
     if (error) {
 
