@@ -545,6 +545,21 @@ function getStore(note) {
     return "未指定";
 }
 
+    function getNote(note) {
+
+    if (!note)
+        return "無";
+
+    const parts = note.split("\n");
+
+    const result = parts
+        .filter(function(item) {
+            return !item.includes("取餐店家：");
+        })
+        .join("\n");
+
+    return result || "無";
+    }
 
 /* 顯示備註 */
 
