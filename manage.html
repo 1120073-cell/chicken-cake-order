@@ -198,7 +198,7 @@ button {
         <button
             type="button"
             class="refresh"
-            id="refreshButton"
+            onclick="loadOrders()"
         >
             🔄 重新整理
         </button>
@@ -228,7 +228,7 @@ const supabaseClient =
 let lastOrderSignature = null;
 let firstLoad = true;
 let currentOrders = [];
-
+let lastOrderCount = 0；
 
 /* 登入 */
 
@@ -386,8 +386,7 @@ async function loadOrders() {
 
         if (
             !firstLoad &&
-            lastOrderSignature !== null &&
-            orderSignature !== lastOrderSignature
+            data.length > lastOrderCount
         ) {
 
             newOrderAlert();
@@ -399,6 +398,7 @@ async function loadOrders() {
 
         firstLoad = false;
 
+        lastOrderCount = data.length;
         ordersDiv.innerHTML = "";
 
         data.forEach(
