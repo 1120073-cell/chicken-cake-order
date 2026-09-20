@@ -182,7 +182,7 @@ button {
     </div>
 
     <div id="adminPage" class="hidden">
-
+<button type="button" id="enableNotification">🔔 開啟新訂單通知</button>
         <button
             type="button"
             class="logout"
@@ -750,7 +750,20 @@ setInterval(
     },
     5000
 );
+document.getElementById("enableNotification").addEventListener("click", async function () {
+    if (!("Notification" in window)) {
+        alert("目前瀏覽器不支援通知");
+        return;
+    }
 
+    const permission = await Notification.requestPermission();
+
+    if (permission === "granted") {
+        alert("通知已開啟！");
+    } else {
+        alert("通知尚未開啟");
+    }
+});
 </script>
 
 </body>
