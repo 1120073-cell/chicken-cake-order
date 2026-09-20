@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>雞蛋糕小姐｜訂單管理</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, "Microsoft JhengHei", sans-serif;
+    background: #fff8f5;
+    color: #5b4030;
+}
+
+.container {
+    max-width: 650px;
+    margin: auto;
+    padding: 20px;
+}
+
+.logo {
+    width: 110px;
+    height: 110px;
+    object-fit: contain;
+    display: block;
+    margin: 10px auto;
+}
+
+h1 {
+    text-align: center;
+    font-size: 28px;
+}
+
+.login-box,
+.order {
+    background: white;
+    border-radius: 18px;
+    padding: 20px;
+    margin: 15px 0;
+    box-shadow: 0 3px 12px rgba(120,80,50,0.12);
+}
+
+input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 13px;
+    margin: 8px 0;
+    border: 1px solid #ead5cc;
+    border-radius: 10px;
+    font-size: 16px;
+}
+
+button {
+    border: none;
+    border-radius: 12px;
+    padding: 13px 18px;
+    font-size: 16px;
+    cursor: pointer;
+}
+
+.login-button {
+    width: 100%;
+    background: #d9907b;
+    color: white;
+    margin-top: 8px;
+}
+
+.logout {
+    background: #eee;
+    color: #5b4030;
+    float: right;
+}
+
+.refresh {
+    background: #f5d8ce;
+    color: #5b4030;
+    margin-bottom: 15px;
+}
+
+.order-title {
+    font-size: 21px;
+    font-weight: bold;
+    margin-bottom: 10px;
+}
+
+.store {
+    display: inline-block;
+    background: #f9e5de;
+    padding: 6px 10px;
+    border-radius: 8px;
+    margin-bottom: 10px;
+}
+
+.order-info {
+    line-height: 1.8;
+}
+
+.items {
+    white-space: pre-line;
+    background: #fff8f5;
+    padding: 12px;
+    border-radius: 10px;
+    margin-top: 8px;
+}
+
+.total {
+    font-size: 22px;
+    font-weight: bold;
+    margin-top: 12px;
+}
+
+.status {
+    display: inline-block;
+    padding: 6px 10px;
+    border-radius: 8px;
+    background: #ffe9a8;
+    margin-top: 10px;
+}
+
+.complete {
+    background: #d9efd9;
+}
+
+.complete-button {
+    background: #d9907b;
+    color: white;
+    margin-top: 12px;
+}
+
+.hidden {
+    display: none;
+}
+
+.empty {
+    text-align: center;
+    padding: 40px 10px;
+    font-size: 18px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <img src="logo.jpeg" class="logo">
+
+    <h1>雞蛋糕小姐</h1>
+    <h2 style="text-align:center;">訂單管理</h2>
+
+    <!-- 登入 -->
+    <div id="loginPage" class="login-box">
+
+        <h3>🔐 管理員登入</h3>
+
+        <input
+            type="email"
+            id="email"
+            placeholder="管理員 Email"
+        >
+
+        <input
+            type="password"
+            id="password"
+            placeholder="密碼"
+        >
+
+        <button
+            class="login-button"
+            onclick="login()"
+        >
+            登入
+        </button>
+
+        <p id="loginMessage"></p>
+
+    </div>
+
+
+    <!-- 管理頁 -->
+    <div id="adminPage" class="hidden">
+
+        <button
+            class="logout"
+            onclick="logout()"
+        >
+            登出
+        </button>
+
+        <div style="clear:both;"></div>
+
+        <br>
+
+        <button
+            class="refresh"
+            onclick="loadOrders()"
+        >
+            🔄 重新整理
+        </button>
+
+        <div id="orders"></div>
+
+    </div>
+
+</div>
+
+
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+<script>
+
+const SUPABASE_URL =
+    "https://eqtrqgarufochsjptchp.supabase.co";
+
+const SUPABASE_KEY =
+    "sb_publishable_PLdJLY-MWvoIa9dSTbs8QA_bLDXkeSy";
+
+const supabaseClient =
+    window.supabase.createClient(
+        SUPABASE_URL,
+        SUPABASE_KEY
+    );
+
+let lastOrderId = null;
+let firstLoad = true;
+
+
+/* 登入 */
+
+async function login() {
+
+    const email =
+        document.getElementById("email").value.trim();
+
+    const password =
+        document.getElementById("password").value;
+
+    const message =
+        document.getElementById("loginMessage");
+
+    if (!email || !password) {
+
+        message.innerText =
+            "請輸入 Email 和密碼";
+
+        return;
+    }
+
+    const { error } =
+        await supabaseClient.auth.signInWithPassword({
+            email: email,
+            password: password
+        });
+
+    if (error) {
+
+        message.innerText =
+            "登入失敗：" + error.message;
+
+        return;
+    }
+
+    document.getElementById("loginPage")
+        .classList.add("hidden");
+
+    document.getElementById("adminPage")
+        .classList.remove("hidden");
+
+    loadOrders();
+
+}
+
+
+/* 登出 */
+
+async function logout() {
+
+    await supabaseClient.auth.signOut();
+
+    document.getElementById("adminPage")
+        .classList.add("hidden");
+
+    document.getElementById("loginPage")
+        .classList.remove("hidden");
+
+}
+
+
+/* 讀取訂單 */
+
+async function loadOrders() {
+
+    const ordersDiv =
+        document.getElementById("orders");
+
+    ordersDiv.innerHTML =
+        "<div class='empty'>載入訂單中...</div>";
+
+    const { data, error } =
+        await supabaseClient
+        .from("orders2")
+        .select("*")
+        .order("id", { ascending: false });
+
+    if (error) {
+
+        ordersDiv.innerHTML =
+            "<div class='empty'>讀取訂單失敗<br>" +
+       error.message +
+            "</div>";
+
+        return;
+    }
+
+    if (!data || data.length === 0) {
+
+        ordersDiv.innerHTML =
+            "<div class='empty'>目前沒有訂單</div>";
+
+        return;
+    }
+
+    /* 偵測最新訂單 */
+
+    if (!firstLoad &&
+        lastOrderId !== null &&
+        data[0].id !== lastOrderId) {
+
+        newOrderAlert();
+
+    }
+
+    lastOrderId = data[0].id;
+    firstLoad = false;
+
+
+    ordersDiv.innerHTML = "";
+
+    data.forEach(order => {
+
+        const div =
+            document.createElement("div");
+
+        div.className = "order";
+
+        const store =
+            getStore(order.note);
+
+        const isNew =
+            order.status === "新訂單";
+
+        div.innerHTML = `
+
+            <div class="order-title">
+                🧾 訂單 #${order.id}
+            </div>
+
+            <div class="store">
+                🏪 ${store}
+            </div>
+
+            <div class="order-info">
+
+                ⏰ 取餐時間：
+                ${order.pickup_time || "未填寫"}
+
+                <br>
+
+                📞 電話：
+                ${order.phone || "未填寫"}
+
+                <br>
+
+                📝 備註：
+                ${getNote(order.note)}
+
+            </div>
+
+            <div class="items">
+                🛒 訂購內容：
+
+                ${order.order_items || ""}
+            </div>
+
+            <div class="total">
+                💰 $${order.total || 0}
+            </div>
+
+            <div class="status ${isNew ? "" : "complete"}">
+                ${order.status || "新訂單"}
+            </div>
+
+            ${
+                isNew
+                ?
+                `<br>
+                <button
+                    class="complete-button"
+                    onclick="completeOrder(${order.id})"
+                >
+                    ✅ 已接單
+                </button>`
+                :
+                ""
+            }
+
+        `;
+
+        ordersDiv.appendChild(div);
+
+    });
+
+}
+
+
+/* 找店家 */
+
+function getStore(note) {
+
+    if (!note) return "未指定";
+
+    if (note.includes("九如店"))
+        return "九如店";
+
+    if (note.includes("繁華店"))
+        return "繁華店";
+
+    return "未指定";
+}
+
+
+/* 顯示備註 */
+
+function getNote(note) {
+
+    if (!note) return "無";
+
+    const parts =
+        note.split("\n");
+
+    const result =
+        parts
+        .filter(item =>
+            !item.includes("取餐店家：")
+        )
+        .join("\n");
+
+    return result || "無";
+}
+
+
+/* 已接單 */
+
+async function completeOrder(id) {
+
+    const { error } =
+        await supabaseClient
+        .from("orders2")
+        .update({
+            status: "已接單"
+        })
+        .eq("id", id);
+
+    if (error) {
+
+        alert(
+            "更新失敗：\n" +
+            error.message
+        );
+
+        return;
+    }
+
+    loadOrders();
+
+}
+
+
+/* 新訂單通知 */
+
+function newOrderAlert() {
+
+    alert("🔔 有新訂單！");
+
+    playSound();
+
+}
+
+
+/* 提示音 */
+
+function playSound() {
+
+    const audioContext =
+        new (
+            window.AudioContext ||
+            window.webkitAudioContext
+        )();
+
+    const oscillator =
+        audioContext.createOscillator();
+
+    const gain =
+        audioContext.createGain();
+
+    oscillator.connect(gain);
+    gain.connect(audioContext.destination);
+
+    oscillator.frequency.value = 880;
+
+    oscillator.start();
+
+    gain.gain.setValueAtTime(
+        0.3,
+        audioContext.currentTime
+    );
+
+    gain.gain.exponentialRampToValueAtTime(
+        0.01,
+        audioContext.currentTime + 0.6
+    );
+
+    oscillator.stop(
+        audioContext.currentTime + 0.6
+    );
+
+}
+
+
+/* 每 5 秒檢查一次 */
+
+setInterval(() => {
+
+    supabaseClient.auth.getSession()
+    .then(({ data }) => {
+
+        if (data.session) {
+            loadOrders();
+        }
+
+    });
+
+}, 5000);
+
+</script>
+
+</body>
+</html>
