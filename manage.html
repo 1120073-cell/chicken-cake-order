@@ -182,7 +182,7 @@ button {
     </div>
 
     <div id="adminPage" class="hidden">
-<button type="button" id="enableNotification">🔔 開啟新訂單通知</button>
+<button type="button" id="enableNotification" onclick="testNotification">🔔 開啟新訂單通知</button>
         <button
             type="button"
             class="logout"
@@ -592,7 +592,7 @@ async function completeOrder(index) {
                 order.pickup_time
             );
 
-    }
+    }8
 
     if (order.phone) {
 
@@ -764,6 +764,9 @@ document.getElementById("enableNotification").addEventListener("click", async fu
         alert("通知尚未開啟");
     }
 });
+function testNotification() {
+    alert("按鈕有成功執行！");
+}
 </script>
 
 </body>
