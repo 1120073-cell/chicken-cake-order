@@ -186,7 +186,6 @@ textarea {
 
 <div class="container">
 
-<!-- 首頁 -->
 <div id="homePage">
 
     <img src="logo.jpeg" class="logo">
@@ -212,7 +211,6 @@ textarea {
 </div>
 
 
-<!-- 菜單 -->
 <div id="menuPage" style="display:none;">
 
     <button class="back-button" onclick="backHome()">
@@ -238,7 +236,6 @@ textarea {
 </div>
 
 
-<!-- 取餐資料 -->
 <div id="orderPage" style="display:none;">
 
     <button class="back-button" onclick="backToMenu()">
@@ -310,7 +307,6 @@ textarea {
 </div>
 
 
-<!-- 送出訂單後 -->
 <div id="successPage" style="display:none;">
 
     <img src="logo.jpeg" class="logo">
@@ -322,42 +318,69 @@ textarea {
         <br><br>
 
         祝您有美好的一天🌹
-
-    </div>
-
 </div>
 
 </div>
 
+</div>
 
 <script>
+
+/* ===== Supabase 設定 ===== */
+
+const SUPABASE_URL =
+
+    "https://eqtrqgarufochsjptchp.supabase.co";
+
+const SUPABASE_KEY =
+
+    "sb_publishable_PLdJLY-MWvoIa9dSTbs8QA_bLDXkeSy";
+
+/* ===== 菜單 ===== */
 
 const menu = [
 
     ["原味", 50],
+
     ["黑糖麻糬", 60],
+
     ["卡士達奶油", 60],
+
     ["卡士達巧克力", 60],
+
     ["戀愛草莓", 60],
+
     ["果香藍莓", 60],
+
     ["好事花生", 60],
+
     ["萬丹紅豆", 60],
+
     ["奶香芋泥", 60],
+
     ["手作奶酥", 70],
+
     ["OREO餅乾", 70],
+
     ["黃金起司", 70],
+
     ["拉絲起司", 70],
+
     ["黑糖Q奶", 70],
+
     ["玉米起司", 80],
+
     ["雙重起司", 80],
+
     ["起司芋泥", 80],
+
     ["德腸起司", 80]
 
 ];
 
 let currentStore = "";
-let quantities = [];
 
+let quantities = [];
 
 function openStore(store) {
 
@@ -370,53 +393,75 @@ function openStore(store) {
     document.getElementById("menuPage").style.display = "block";
 
     document.getElementById("storeTitle").innerText =
+
         store + "｜菜單";
 
     showProducts();
 
     window.scrollTo(0, 0);
-}
 
+}
 
 function showProducts() {
 
-    const products = document.getElementById("products");
+    const products =
+
+        document.getElementById("products");
 
     products.innerHTML = "";
 
     menu.forEach((item, index) => {
 
-        const div = document.createElement("div");
+        const div =
+
+            document.createElement("div");
 
         div.className = "product";
 
         div.innerHTML = `
 
             <div>
+
                 <div class="product-name">
+
                     ${item[0]}
+
                 </div>
 
                 <div class="price">
+
                     $${item[1]}
+
                 </div>
+
             </div>
 
             <div class="quantity">
 
-                <button onclick="changeQuantity(${index}, -1)">
+                <button
+
+                    onclick="changeQuantity(${index}, -1)">
+
                     −
+
                 </button>
 
                 <span class="number">
+
                     ${quantities[index]}
+
                 </span>
 
-                <button onclick="changeQuantity(${index}, 1)">
+                <button
+
+                    onclick="changeQuantity(${index}, 1)">
+
                     +
+
                 </button>
 
             </div>
+
         `;
 
         products.appendChild(div);
@@ -424,20 +469,22 @@ function showProducts() {
     });
 
     updateTotal();
-}
 
+}
 
 function changeQuantity(index, change) {
 
     quantities[index] += change;
 
     if (quantities[index] < 0) {
+
         quantities[index] = 0;
+
     }
 
     showProducts();
-}
 
+}
 
 function getTotal() {
 
@@ -445,21 +492,23 @@ function getTotal() {
 
     menu.forEach((item, index) => {
 
-        total += item[1] * quantities[index];
+        total +=
+
+            item[1] * quantities[index];
 
     });
 
     return total;
-}
 
+}
 
 function updateTotal() {
 
     document.getElementById("total").innerText =
+
         getTotal();
 
 }
-
 
 function goToOrder() {
 
@@ -468,27 +517,35 @@ function goToOrder() {
         alert("請先選擇雞蛋糕數量！");
 
         return;
+
     }
 
-    document.getElementById("menuPage").style.display = "none";
+    document.getElementById("menuPage").style.display =
 
-    document.getElementById("orderPage").style.display = "block";
+        "none";
+
+    document.getElementById("orderPage").style.display =
+
+        "block";
 
     document.getElementById("orderStore").innerText =
+
         currentStore;
 
     document.getElementById("orderTotal").innerText =
+
         getTotal();
 
     createOrderSummary();
 
     window.scrollTo(0, 0);
-}
 
+}
 
 function createOrderSummary() {
 
     const summary =
+
         document.getElementById("orderSummary");
 
     summary.innerHTML = "";
@@ -498,72 +555,213 @@ function createOrderSummary() {
         if (quantities[index] > 0) {
 
             const div =
+
                 document.createElement("div");
 
             div.className = "summary-item";
 
             div.innerText =
+
                 item[0] +
+
                 " × " +
+
                 quantities[index] +
+
                 "　$" +
+
                 (item[1] * quantities[index]);
 
             summary.appendChild(div);
+
         }
 
     });
 
 }
 
+/* ===== 送出訂單到 Supabase ===== */
 
-function confirmOrder() {
+async function confirmOrder() {
 
     const time =
+
         document.getElementById("pickupTime").value;
+
+    const note =
+
+        document.getElementById("note").value.trim();
 
     if (!time) {
 
         alert("請選擇取餐時間！");
 
         return;
+
     }
 
-    document.getElementById("orderPage").style.display =
-        "none";
+    const orderItems = [];
 
-    document.getElementById("successPage").style.display =
-        "block";
+    menu.forEach((item, index) => {
 
-    window.scrollTo(0, 0);
+        if (quantities[index] > 0) {
+
+            orderItems.push(
+
+                item[0] +
+
+                " × " +
+
+                quantities[index] +
+
+                "　$" +
+
+                (item[1] * quantities[index])
+
+            );
+
+        }
+
+    });
+
+    const orderData = {
+
+        name: "",
+
+        phone: "",
+
+        pickup_time: time,
+
+        order_items: orderItems.join("\n"),
+
+        total: getTotal(),
+
+        note:
+
+            "取餐店家：" +
+
+            currentStore +
+
+            (note ? "\n備註：" + note : ""),
+
+        status: "新訂單"
+
+    };
+
+    try {
+
+        const response = await fetch(
+
+            SUPABASE_URL + "/rest/v1/orders2",
+
+            {
+
+                method: "POST",
+
+                headers: {
+
+                    "Content-Type":
+
+                        "application/json",
+
+                    "apikey":
+
+                        SUPABASE_KEY,
+
+                    "Authorization":
+
+                        "Bearer " + SUPABASE_KEY,
+
+                    "Prefer":
+
+                        "return=minimal"
+
+                },
+
+                body:
+
+                    JSON.stringify(orderData)
+
+            }
+
+        );
+
+        if (!response.ok) {
+
+            const errorText =
+
+                await response.text();
+
+            console.error(errorText);
+
+            alert(
+
+                "訂單送出失敗！\n\n" +
+
+                "請稍後再試。"
+
+            );
+
+            return;
+
+        }
+
+        document.getElementById("orderPage").style.display =
+
+            "none";
+
+        document.getElementById("successPage").style.display =
+
+            "block";
+
+        window.scrollTo(0, 0);
+
+    }
+
+    catch (error) {
+
+        console.error(error);
+
+        alert(
+
+            "目前無法連線到訂單系統，請稍後再試！"
+
+        );
+
+    }
+
 }
-
 
 function backHome() {
 
     document.getElementById("menuPage").style.display =
+
         "none";
 
     document.getElementById("homePage").style.display =
+
         "block";
 
     window.scrollTo(0, 0);
-}
 
+}
 
 function backToMenu() {
 
     document.getElementById("orderPage").style.display =
+
         "none";
 
     document.getElementById("menuPage").style.display =
+
         "block";
 
     window.scrollTo(0, 0);
+
 }
 
 </script>
 
 </body>
-</html>
 
+</html>
