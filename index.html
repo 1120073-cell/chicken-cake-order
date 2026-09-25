@@ -582,14 +582,12 @@ function createOrderSummary() {
 
 /* ===== 送出訂單到 Supabase ===== */
 
-async function confirmOrder() {
+ async function confirmOrder() {
 
     const time =
-
         document.getElementById("pickupTime").value;
 
     const note =
-
         document.getElementById("note").value.trim();
 
     if (!time) {
@@ -597,8 +595,118 @@ async function confirmOrder() {
         alert("請選擇取餐時間！");
 
         return;
+    }
+
+    const orderItems = [];
+
+    menu.forEach((item, index) => {
+
+        if (quantities[index] > 0) {
+
+            orderItems.push(
+
+                item[0] +
+                " × " +
+                quantities[index] +
+                "　$" +
+                (item[1] * quantities[index])
+            );
+
+        }
+
+    });
+
+    const orderData = {
+
+        name: "",
+
+        phone: "",
+
+        pickup_time: time,
+
+        order_items: orderItems.join("\n"),
+
+        total: getTotal(),
+
+        note:
+            "取餐店家：" +
+            currentStore +
+            (note ? "\n備註：" + note : ""),
+
+        status: "新訂單"
+
+    };
+
+    try {
+
+        const response = await fetch(
+
+            SUPABASE_URL + "/rest/v1/orders2",
+
+            {
+
+                method: "POST",
+
+                headers: {
+
+                    "Content-Type":
+                        "application/json",
+
+                    "apikey":
+                        SUPABASE_KEY,
+
+                    "Authorization":
+                        "Bearer " + SUPABASE_KEY,
+
+                    "Prefer":
+                        "return=minimal"
+
+                },
+
+                body:
+                    JSON.stringify(orderData)
+
+            }
+
+        );
+
+        if (!response.ok) {
+
+            const errorText =
+                await response.text();
+
+            console.error(errorText);
+
+            alert(
+                "訂單送出失敗！\n\n" +
+                "請稍後再試。"
+            );
+
+            return;
+
+        }
+
+        document.getElementById("orderPage").style.display =
+            "none";
+
+        document.getElementById("successPage").style.display =
+            "block";
+
+        window.scrollTo(0, 0);
 
     }
+
+    catch (error) {
+
+        console.error(error);
+
+        alert(
+            "目前無法連線到訂單系統，請稍後再試！"
+        );
+
+    }
+
+ }
 
     const orderItems = [];
 
