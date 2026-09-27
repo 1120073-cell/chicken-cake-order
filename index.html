@@ -333,6 +333,7 @@ textarea {
 }
 
 .success {
+
     text-align: center;
 
     font-size: 23px;
@@ -342,7 +343,6 @@ textarea {
     padding: 45px 10px;
 
     font-weight: bold;
-
 }
 
 </style>
@@ -549,8 +549,6 @@ textarea {
 
 <script>
 
-/* ===== Supabase 設定 ===== */
-
 const SUPABASE_URL =
 
     "https://eqtrqgarufochsjptchp.supabase.co";
@@ -558,7 +556,6 @@ const SUPABASE_URL =
 const SUPABASE_KEY =
 
     "sb_publishable_PLdJLY-MWvoIa9dSTbs8QA_bLDXkeSy";
-    /* ===== 菜單 ===== */
 
 const menu = [
 
@@ -598,7 +595,7 @@ const menu = [
 
     ["德腸起司", 80]
 
-];
+    ];
 
 let currentStore = "";
 
@@ -742,212 +739,6 @@ function goToOrder() {
 
     }
 
-    document.getElementById("menuPage").style.display =
-
-        "none";
-
-    document.getElementById("orderPage").style.display =
-
-        "block";
-
-    document.getElementById("orderStore").innerText =
-
-        currentStore;
-
-    document.getElementById("orderTotal").innerText =
-
-        getTotal();
-
-    createOrderSummary();
-
-    window.scrollTo(0, 0);
-
-}
-
-function createOrderSummary() {
-    /* ===== 菜單 ===== */
-
-const menu = [
-
-    ["原味", 50],
-
-    ["卡士達奶油", 60],
-
-    ["卡士達巧克力", 60],
-
-    ["戀愛草莓", 60],
-
-    ["果香藍莓", 60],
-
-    ["好事花生", 60],
-
-    ["萬丹紅豆", 60],
-
-    ["奶香芋泥", 60],
-
-    ["黑糖麻糬", 60],
-
-    ["手作奶酥", 70],
-
-    ["OREO餅乾", 70],
-
-    ["黃金起司", 70],
-
-    ["拉絲起司", 70],
-
-    ["黑糖Q奶", 70],
-
-    ["玉米起司", 80],
-
-    ["雙重起司", 80],
-
-    ["起司芋泥", 80],
-
-    ["德腸起司", 80]
-
-];
-
-let currentStore = "";
-
-let quantities = [];
-
-function openStore(store) {
-
-    currentStore = store;
-
-    quantities = menu.map(() => 0);
-
-    document.getElementById("homePage").style.display = "none";
-
-    document.getElementById("menuPage").style.display = "block";
-
-    document.getElementById("storeTitle").innerText =
-
-        store + "｜菜單";
-
-    showProducts();
-
-    window.scrollTo(0, 0);
-
-}
-
-function showProducts() {
-
-    const products =
-
-        document.getElementById("products");
-
-    products.innerHTML = "";
-
-    menu.forEach((item, index) => {
-
-        const div =
-
-            document.createElement("div");
-
-        div.className = "product";
-
-        div.innerHTML = `
-
-            <div>
-
-                <div class="product-name">
-
-                    ${item[0]}
-
-                </div>
-
-                <div class="price">
-
-                    $${item[1]}
-
-                </div>
-
-            </div>
-
-            <div class="quantity">
-
-                <button
-
-                    onclick="changeQuantity(${index}, -1)">
-
-                    −
-
-                </button>
-
-                <span class="number">
-
-                    ${quantities[index]}
-
-                </span>
-
-                <button
-
-                    onclick="changeQuantity(${index}, 1)">
-
-                    +
-
-                </button>
-
-            </div>
-
-        `;
-
-        products.appendChild(div);
-
-    });
-
-    updateTotal();
-
-}
-
-function changeQuantity(index, change) {
-
-    quantities[index] += change;
-
-    if (quantities[index] < 0) {
-
-        quantities[index] = 0;
-
-    }
-
-    showProducts();
-
-}
-
-function getTotal() {
-
-    let total = 0;
-
-    menu.forEach((item, index) => {
-
-        total +=
-
-            item[1] * quantities[index];
-
-    });
-
-    return total;
-
-}
-
-function updateTotal() {
-
-    document.getElementById("total").innerText =
-
-        getTotal();
-
-}
-
-function goToOrder() {
-
-    if (getTotal() === 0) {
-
-        alert("請先選擇雞蛋糕數量！");
-
-        return;
-
-                        }
     document.getElementById("menuPage").style.display =
 
         "none";
@@ -988,7 +779,7 @@ function createOrderSummary() {
 
             div.className = "summary-item";
 
-            div.innerText =
+    div.innerText =
 
                 item[0] +
 
@@ -1007,8 +798,6 @@ function createOrderSummary() {
     });
 
 }
-
-/* ===== 送出訂單到 LINE ===== */
 
 async function confirmOrder() {
 
@@ -1066,6 +855,8 @@ async function confirmOrder() {
 
     const orderData = {
 
+        pickup_store: currentStore,
+
         phone_last3: phoneLast3,
 
         pickup_time: time,
@@ -1074,15 +865,7 @@ async function confirmOrder() {
 
         total: getTotal(),
 
-        note:
-
-            "取餐店家：" +
-
-            currentStore +
-
-            (note ? "\n備註：" + note : ""),
-
-        status: "新訂單"
+        note: note
 
     };
 
