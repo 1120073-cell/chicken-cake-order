@@ -282,16 +282,6 @@ textarea {
 
 }
 
-#phoneLast3 {
-
-    width: 100%;
-
-    min-height: 52px;
-
-    font-size: 18px;
-
-}
-
 input[type="time"] {
 
     width: 100%;
@@ -318,12 +308,21 @@ textarea {
 
 }
 
+.phone-hint {
+
+    font-size: 14px;
+
+    color: #a66b4f;
+
+    margin-top: 8px;
+
+}
+
 .summary-item {
 
     padding: 8px 0;
 
     border-bottom: 1px solid #f1e4df;
-
 }
 
 .summary-total {
@@ -349,7 +348,28 @@ textarea {
     padding: 45px 10px;
 
     font-weight: bold;
-    }
+
+}
+
+.closed {
+
+    text-align: center;
+
+    background: white;
+
+    border-radius: 15px;
+
+    padding: 30px 15px;
+
+    margin-top: 25px;
+
+    font-size: 19px;
+
+    line-height: 1.8;
+
+    box-shadow: 0 2px 8px rgba(120,80,50,0.08);
+
+}
 
 </style>
 
@@ -373,23 +393,45 @@ textarea {
 
         </div>
 
-        <div class="choose">
+        <div id="openContent">
 
-            請選擇取餐店家
+            <div class="choose">
+
+                請選擇取餐店家
+
+            </div>
+
+            <button id="jiuruStoreButton" class="store-button" type="button">
+
+                🏪 九如店
+
+            </button>
+
+            <button id="fanhuaStoreButton" class="store-button" type="button">
+
+                🏪 繁華店
+
+            </button>
 
         </div>
 
-        <button id="jiuruStoreButton" class="store-button" type="button">
+        <div id="closedContent" style="display:none;">
 
-            🏪 九如店
+            <div class="closed">
 
-        </button>
+                🌷 今日公休 🌷
 
-        <button id="fanhuaStoreButton" class="store-button" type="button">
+                <br>
 
-            🏪 繁華店
+                星期一暫停線上訂餐
 
-        </button>
+                <br>
+
+                歡迎其他營業日再來訂購！
+
+            </div>
+
+        </div>
 
     </div>
 
@@ -455,27 +497,31 @@ textarea {
 
             <div class="section-title">
 
-                📱 電話後三碼
+                📱 電話號碼
 
             </div>
 
             <input
 
-                type="text"
+                type="tel"
 
-                id="phoneLast3"
+                id="phone"
 
-                placeholder="請輸入電話後三碼"
+                placeholder="請輸入完整電話號碼"
 
-                maxlength="3"
+                maxlength="10"
 
                 inputmode="numeric"
 
-                pattern="[0-9]{3}"
-
-                autocomplete="off"
+                autocomplete="tel"
 
             >
+
+            <div class="phone-hint">
+
+                方便之後聯絡
+
+            </div>
 
         </div>
 
@@ -607,7 +653,43 @@ let currentStore = "";
 
 let quantities = [];
 
+/* 星期一暫停訂餐 */
+
+function checkOpeningDay() {
+
+    const taiwanTime = new Date(
+
+        new Date().toLocaleString("en-US", {
+
+            timeZone: "Asia/Taipei"
+
+        })
+
+    );
+
+    const isMonday = taiwanTime.getDay() === 1;
+
+    document.getElementById("openContent").style.display =
+
+        isMonday ? "none" : "block";
+
+    document.getElementById("closedContent").style.display =
+
+        isMonday ? "block" : "none";
+
+}
+
+checkOpeningDay();
+
 function openStore(store) {
+
+    if (!isOrderingOpen()) {
+
+        alert("星期一公休，暫停線上訂餐！");
+
+        return;
+
+    }
 
     currentStore = store;
 
@@ -627,19 +709,31 @@ function openStore(store) {
 
 }
 
+function isOrderingOpen() {
+
+    const taiwanTime = new Date(
+
+        new Date().toLocaleString("en-US", {
+
+            timeZone: "Asia/Taipei"
+
+        })
+
+    );
+
+    return taiwanTime.getDay() !== 1;
+
+}
+
 function showProducts() {
 
-    const products =
-
-        document.getElementById("products");
+    const products = document.getElementById("products");
 
     products.innerHTML = "";
 
     menu.forEach((item, index) => {
 
-        const div =
-
-            document.createElement("div");
+        const div = document.createElement("div");
 
         div.className = "product";
 
@@ -647,51 +741,27 @@ function showProducts() {
 
             <div>
 
-                <div class="product-name">
+                <div class="product-name">${item[0]}</div>
 
-                    ${item[0]}
-
-                </div>
-
-                <div class="price">
-
-                    $${item[1]}
-
-                </div>
+                <div class="price">$${item[1]}</div>
 
             </div>
 
             <div class="quantity">
 
-                <button
-
-                    type="button"
+                <button type="button"
 
                     data-index="${index}"
 
-                    data-change="-1">
+                    data-change="-1">−</button>
 
-                    −
+                <span class="number">${quantities[index]}</span>
 
-                </button>
-
-                <span class="number">
-
-                    ${quantities[index]}
-
-                </span>
-
-                <button
-
-                    type="button"
+                <button type="button"
 
                     data-index="${index}"
 
-                    data-change="1">
-
-                    +
-
-                </button>
+                    data-change="1">+</button>
 
             </div>
 
@@ -751,13 +821,19 @@ function goToOrder() {
 
     }
 
-    document.getElementById("menuPage").style.display =
+    if (!isOrderingOpen()) {
 
-        "none";
+        alert("星期一公休，暫停線上訂餐！");
 
-    document.getElementById("orderPage").style.display =
+        backHome();
 
-        "block";
+        return;
+
+    }
+
+    document.getElementById("menuPage").style.display = "none";
+
+    document.getElementById("orderPage").style.display = "block";
 
     document.getElementById("orderStore").innerText =
 
@@ -775,9 +851,7 @@ function goToOrder() {
 
 function createOrderSummary() {
 
-    const summary =
-
-        document.getElementById("orderSummary");
+    const summary = document.getElementById("orderSummary");
 
     summary.innerHTML = "";
 
@@ -785,9 +859,7 @@ function createOrderSummary() {
 
         if (quantities[index] > 0) {
 
-            const div =
-
-                document.createElement("div");
+            const div = document.createElement("div");
 
             div.className = "summary-item";
 
@@ -813,9 +885,19 @@ function createOrderSummary() {
 
 async function confirmOrder() {
 
-    const phoneLast3 =
+    if (!isOrderingOpen()) {
 
-        document.getElementById("phoneLast3").value.trim();
+        alert("星期一公休，暫停線上訂餐！");
+
+        backHome();
+
+        return;
+
+    }
+
+    const phone =
+
+        document.getElementById("phone").value.trim();
 
     const time =
 
@@ -825,9 +907,9 @@ async function confirmOrder() {
 
         document.getElementById("note").value.trim();
 
-    if (!/^[0-9]{3}$/.test(phoneLast3)) {
+    if (!/^09[0-9]{8}$/.test(phone)) {
 
-        alert("請輸入正確的電話後三碼！");
+        alert("請輸入正確的10碼手機號碼！");
 
         return;
 
@@ -838,7 +920,6 @@ async function confirmOrder() {
         alert("請選擇取餐時間！");
 
         return;
-
     }
 
     const orderItems = [];
@@ -859,7 +940,7 @@ async function confirmOrder() {
 
                 (item[1] * quantities[index])
 
-                );
+            );
 
         }
 
@@ -869,7 +950,7 @@ async function confirmOrder() {
 
         pickup_store: currentStore,
 
-        phone_last3: phoneLast3,
+        phone: phone,
 
         pickup_time: time,
 
@@ -905,29 +986,19 @@ async function confirmOrder() {
 
         if (!response.ok) {
 
-            const errorText =
-
-                await response.text();
+            const errorText = await response.text();
 
             console.error(errorText);
 
-            alert(
-
-                "訂單送出失敗！\n\n請稍後再試。"
-
-            );
+            alert("訂單送出失敗！\n\n請稍後再試。");
 
             return;
 
         }
 
-        document.getElementById("orderPage").style.display =
+        document.getElementById("orderPage").style.display = "none";
 
-            "none";
-
-        document.getElementById("successPage").style.display =
-
-            "block";
+        document.getElementById("successPage").style.display = "block";
 
         window.scrollTo(0, 0);
 
@@ -937,11 +1008,7 @@ async function confirmOrder() {
 
         console.error(error);
 
-        alert(
-
-            "目前無法連線到訂單系統，請稍後再試！"
-
-        );
+        alert("目前無法連線到訂單系統，請稍後再試！");
 
     }
 
@@ -949,13 +1016,9 @@ async function confirmOrder() {
 
 function backHome() {
 
-    document.getElementById("menuPage").style.display =
+    document.getElementById("menuPage").style.display = "none";
 
-        "none";
-
-    document.getElementById("homePage").style.display =
-
-        "block";
+    document.getElementById("homePage").style.display = "block";
 
     window.scrollTo(0, 0);
 
@@ -963,27 +1026,17 @@ function backHome() {
 
 function backToMenu() {
 
-    document.getElementById("orderPage").style.display =
+    document.getElementById("orderPage").style.display = "none";
 
-        "none";
-
-    document.getElementById("menuPage").style.display =
-
-        "block";
+    document.getElementById("menuPage").style.display = "block";
 
     window.scrollTo(0, 0);
 
 }
 
-/* =========================
+/* 按鈕事件 */
 
-   按鈕事件
-
-========================= */
-
-document
-
-    .getElementById("jiuruStoreButton")
+document.getElementById("jiuruStoreButton")
 
     .addEventListener("click", function () {
 
@@ -991,9 +1044,7 @@ document
 
     });
 
-document
-
-    .getElementById("fanhuaStoreButton")
+document.getElementById("fanhuaStoreButton")
 
     .addEventListener("click", function () {
 
@@ -1001,57 +1052,29 @@ document
 
     });
 
-document
+document.getElementById("backHomeButton")
 
-    .getElementById("backHomeButton")
+    .addEventListener("click", backHome);
 
-    .addEventListener("click", function () {
+document.getElementById("goToOrderButton")
 
-        backHome();
+    .addEventListener("click", goToOrder);
 
-    });
+document.getElementById("backToMenuButton")
 
-document
+    .addEventListener("click", backToMenu);
 
-    .getElementById("goToOrderButton")
+document.getElementById("confirmOrderButton")
 
-    .addEventListener("click", function () {
-
-        goToOrder();
-
-    });
-
-document
-
-    .getElementById("backToMenuButton")
-
-    .addEventListener("click", function () {
-
-        backToMenu();
-
-    });
-
-document
-
-    .getElementById("confirmOrderButton")
-
-    .addEventListener("click", function () {
-
-        confirmOrder();
-
-    });
+    .addEventListener("click", confirmOrder);
 
 /* 菜單加減按鈕 */
 
-document
-
-    .getElementById("products")
+document.getElementById("products")
 
     .addEventListener("click", function (event) {
 
-        const button =
-
-            event.target.closest("button");
+        const button = event.target.closest("button");
 
         if (!button) {
 
@@ -1059,13 +1082,9 @@ document
 
         }
 
-        const index =
+        const index = Number(button.dataset.index);
 
-            Number(button.dataset.index);
-
-        const change =
-
-            Number(button.dataset.change);
+        const change = Number(button.dataset.change);
 
         if (
 
