@@ -102,6 +102,8 @@ h1 {
 
     box-shadow: 0 3px 12px rgba(120,80,50,0.15);
 
+    cursor: pointer;
+
 }
 
 .main-button {
@@ -123,6 +125,8 @@ h1 {
     font-size: 17px;
 
     padding: 5px 0 15px;
+
+    cursor: pointer;
 
 }
 
@@ -195,6 +199,8 @@ h1 {
     color: #5b4030;
 
     font-size: 20px;
+
+    cursor: pointer;
 
 }
 
@@ -343,7 +349,7 @@ textarea {
     padding: 45px 10px;
 
     font-weight: bold;
-}
+    }
 
 </style>
 
@@ -353,209 +359,209 @@ textarea {
 
 <div class="container">
 
-<div id="homePage">
+    <!-- 首頁 -->
 
-    <img src="logo.jpeg" class="logo">
+    <div id="homePage">
 
-    <h1>雞蛋糕小姐</h1>
+        <img src="logo.jpeg" class="logo">
 
-    <div class="subtitle">
+        <h1>雞蛋糕小姐</h1>
 
-        線上訂餐
+        <div class="subtitle">
 
-    </div>
-
-    <div class="choose">
-
-        請選擇取餐店家
-
-    </div>
-
-    <button class="store-button" onclick="openStore('九如店')">
-
-        🏪 九如店
-
-    </button>
-
-    <button class="store-button" onclick="openStore('繁華店')">
-
-        🏪 繁華店
-
-    </button>
-
-</div>
-
-<div id="menuPage" style="display:none;">
-
-    <button class="back-button" onclick="backHome()">
-
-        ← 回選店家
-
-    </button>
-
-    <img src="logo.jpeg" class="logo">
-
-    <h1>雞蛋糕小姐</h1>
-
-    <div id="storeTitle" class="store-title"></div>
-
-    <div id="products"></div>
-
-    <div class="total">
-
-        總金額：$<span id="total">0</span>
-
-    </div>
-
-    <button class="main-button" onclick="goToOrder()">
-
-        確認訂單
-
-    </button>
-
-</div>
-
-<div id="orderPage" style="display:none;">
-
-    <button class="back-button" onclick="backToMenu()">
-
-        ← 回菜單
-
-    </button>
-
-    <img src="logo.jpeg" class="logo">
-
-    <h1>確認訂單</h1>
-
-    <div class="section">
-
-        <div class="section-title">
-
-            🏪 取餐店家
+            線上訂餐
 
         </div>
 
-        <div id="orderStore"></div>
+        <div class="choose">
 
-    </div>
-
-    <div class="section">
-
-        <div class="section-title">
-
-            📱 電話後三碼
+            請選擇取餐店家
 
         </div>
 
-        <input
+        <button id="jiuruStoreButton" class="store-button" type="button">
 
-            type="text"
+            🏪 九如店
 
-            id="phoneLast3"
+        </button>
 
-            placeholder="請輸入電話後三碼"
+        <button id="fanhuaStoreButton" class="store-button" type="button">
 
-            maxlength="3"
+            🏪 繁華店
 
-            inputmode="numeric"
-
-            pattern="[0-9]{3}"
-
-            autocomplete="off"
-
-        >
+        </button>
 
     </div>
 
-    <div class="section">
+    <!-- 菜單 -->
 
-        <div class="section-title">
+    <div id="menuPage" style="display:none;">
 
-            ⏰ 取餐時間
+        <button id="backHomeButton" class="back-button" type="button">
+
+            ← 回選店家
+
+        </button>
+
+        <img src="logo.jpeg" class="logo">
+
+        <h1>雞蛋糕小姐</h1>
+
+        <div id="storeTitle" class="store-title"></div>
+
+        <div id="products"></div>
+
+        <div class="total">
+
+            總金額：$<span id="total">0</span>
 
         </div>
 
-        <input
+        <button id="goToOrderButton" class="main-button" type="button">
 
-            type="time"
+            確認訂單
 
-            id="pickupTime"
-
-        >
+        </button>
 
     </div>
 
-    <div class="section">
+    <!-- 訂單 -->
 
-        <div class="section-title">
+    <div id="orderPage" style="display:none;">
 
-            📝 備註
+        <button id="backToMenuButton" class="back-button" type="button">
+
+            ← 回菜單
+
+        </button>
+
+        <img src="logo.jpeg" class="logo">
+
+        <h1>確認訂單</h1>
+
+        <div class="section">
+
+            <div class="section-title">
+
+                🏪 取餐店家
+
+            </div>
+
+            <div id="orderStore"></div>
 
         </div>
 
-        <textarea
+        <div class="section">
 
-            id="note"
+            <div class="section-title">
 
-            placeholder="有其他需求可以寫在這裡（選填）"
+                📱 電話後三碼
 
-        ></textarea>
+            </div>
 
-    </div>
+            <input
 
-    <div class="section">
+                type="text"
 
-        <div class="section-title">
+                id="phoneLast3"
 
-            🛒 訂購內容
+                placeholder="請輸入電話後三碼"
+
+                maxlength="3"
+
+                inputmode="numeric"
+
+                pattern="[0-9]{3}"
+
+                autocomplete="off"
+
+            >
 
         </div>
 
-        <div id="orderSummary"></div>
+        <div class="section">
 
-        <div class="summary-total">
+            <div class="section-title">
 
-            總金額：$<span id="orderTotal">0</span>
+                ⏰ 取餐時間
+
+            </div>
+
+            <input
+
+                type="time"
+
+                id="pickupTime"
+
+            >
+
+        </div>
+
+        <div class="section">
+
+            <div class="section-title">
+
+                📝 備註
+
+            </div>
+
+            <textarea
+
+                id="note"
+
+                placeholder="有其他需求可以寫在這裡（選填）"
+
+            ></textarea>
+
+        </div>
+
+        <div class="section">
+
+            <div class="section-title">
+
+                🛒 訂購內容
+
+            </div>
+
+            <div id="orderSummary"></div>
+
+            <div class="summary-total">
+
+                總金額：$<span id="orderTotal">0</span>
+
+            </div>
+
+        </div>
+
+        <button id="confirmOrderButton" class="main-button" type="button">
+
+            送出訂單
+
+        </button>
+
+    </div>
+
+    <!-- 完成 -->
+
+    <div id="successPage" style="display:none;">
+
+        <img src="logo.jpeg" class="logo">
+
+        <div class="success">
+
+            感謝您的訂購
+
+            <br><br>
+
+            祝您有美好的一天🌹
 
         </div>
 
     </div>
-
-    <button class="main-button" onclick="confirmOrder()">
-
-        送出訂單
-
-    </button>
-
-</div>
-
-<div id="successPage" style="display:none;">
-
-    <img src="logo.jpeg" class="logo">
-
-    <div class="success">
-
-        感謝您的訂購
-
-        <br><br>
-
-        祝您有美好的一天🌹
-
-    </div>
-
-</div>
 
 </div>
 
 <script>
-
-const SUPABASE_URL =
-
-    "https://eqtrqgarufochsjptchp.supabase.co";
-
-const SUPABASE_KEY =
-
-    "sb_publishable_PLdJLY-MWvoIa9dSTbs8QA_bLDXkeSy";
 
 const menu = [
 
@@ -595,7 +601,7 @@ const menu = [
 
     ["德腸起司", 80]
 
-    ];
+];
 
 let currentStore = "";
 
@@ -659,7 +665,11 @@ function showProducts() {
 
                 <button
 
-                    onclick="changeQuantity(${index}, -1)">
+                    type="button"
+
+                    data-index="${index}"
+
+                    data-change="-1">
 
                     −
 
@@ -673,7 +683,11 @@ function showProducts() {
 
                 <button
 
-                    onclick="changeQuantity(${index}, 1)">
+                    type="button"
+
+                    data-index="${index}"
+
+                    data-change="1">
 
                     +
 
@@ -711,9 +725,7 @@ function getTotal() {
 
     menu.forEach((item, index) => {
 
-        total +=
-
-            item[1] * quantities[index];
+        total += item[1] * quantities[index];
 
     });
 
@@ -779,7 +791,7 @@ function createOrderSummary() {
 
             div.className = "summary-item";
 
-    div.innerText =
+            div.innerText =
 
                 item[0] +
 
@@ -847,7 +859,7 @@ async function confirmOrder() {
 
                 (item[1] * quantities[index])
 
-            );
+                );
 
         }
 
@@ -901,9 +913,7 @@ async function confirmOrder() {
 
             alert(
 
-                "訂單送出失敗！\n\n" +
-
-                "請稍後再試。"
+                "訂單送出失敗！\n\n請稍後再試。"
 
             );
 
@@ -964,6 +974,112 @@ function backToMenu() {
     window.scrollTo(0, 0);
 
 }
+
+/* =========================
+
+   按鈕事件
+
+========================= */
+
+document
+
+    .getElementById("jiuruStoreButton")
+
+    .addEventListener("click", function () {
+
+        openStore("九如店");
+
+    });
+
+document
+
+    .getElementById("fanhuaStoreButton")
+
+    .addEventListener("click", function () {
+
+        openStore("繁華店");
+
+    });
+
+document
+
+    .getElementById("backHomeButton")
+
+    .addEventListener("click", function () {
+
+        backHome();
+
+    });
+
+document
+
+    .getElementById("goToOrderButton")
+
+    .addEventListener("click", function () {
+
+        goToOrder();
+
+    });
+
+document
+
+    .getElementById("backToMenuButton")
+
+    .addEventListener("click", function () {
+
+        backToMenu();
+
+    });
+
+document
+
+    .getElementById("confirmOrderButton")
+
+    .addEventListener("click", function () {
+
+        confirmOrder();
+
+    });
+
+/* 菜單加減按鈕 */
+
+document
+
+    .getElementById("products")
+
+    .addEventListener("click", function (event) {
+
+        const button =
+
+            event.target.closest("button");
+
+        if (!button) {
+
+            return;
+
+        }
+
+        const index =
+
+            Number(button.dataset.index);
+
+        const change =
+
+            Number(button.dataset.change);
+
+        if (
+
+            Number.isInteger(index) &&
+
+            Number.isInteger(change)
+
+        ) {
+
+            changeQuantity(index, change);
+
+        }
+
+    });
 
 </script>
 
