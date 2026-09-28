@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+
+<html lang="zh-TW">
+
+<head>
+
+<meta charset="UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>雞蛋糕小姐｜訂單管理</title>
+
+<style>
+
+* {
+
+  box-sizing: border-box;
+
+}
+
+body {
+
+  margin: 0;
+
+  padding: 20px;
+
+  min-height: 100vh;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  background: #fff5f5;
+
+  font-family: Arial, "Noto Sans TC", sans-serif;
+
+  color: #654b45;
+
+}
+
+.container {
+
+  width: 100%;
+
+  max-width: 420px;
+
+  padding: 30px 22px;
+
+  background: white;
+
+  border-radius: 22px;
+
+  box-shadow: 0 4px 20px #e9cccc;
+
+  text-align: center;
+
+}
+
+.logo {
+
+  width: 120px;
+
+  height: 120px;
+
+  object-fit: contain;
+
+  border-radius: 50%;
+
+  margin-bottom: 12px;
+
+}
+
+h1 {
+
+  font-size: 25px;
+
+  line-height: 1.5;
+
+  margin: 0 0 28px;
+
+}
+
+button {
+
+  width: 100%;
+
+  padding: 17px;
+
+  margin: 10px 0;
+
+  border: none;
+
+  border-radius: 13px;
+
+  font-size: 19px;
+
+  font-weight: bold;
+
+  cursor: pointer;
+
+}
+
+.open {
+
+  background: #d8efdc;
+
+  color: #28683a;
+
+}
+
+.close {
+
+  background: #f8dada;
+
+  color: #a33b3b;
+
+}
+
+button:disabled {
+
+  opacity: 0.6;
+
+  cursor: wait;
+
+}
+
+.modal {
+
+  display: none;
+
+  position: fixed;
+
+  inset: 0;
+
+  background: #0008;
+
+  justify-content: center;
+
+  align-items: center;
+
+  padding: 18px;
+
+  z-index: 10;
+
+}
+
+.modal-box {
+
+  background: white;
+
+  width: 100%;
+
+  max-width: 420px;
+
+  max-height: 90vh;
+
+  overflow-y: auto;
+
+  padding: 24px;
+
+  border-radius: 18px;
+
+  text-align: left;
+
+}
+
+.modal-box h2 {
+
+  text-align: center;
+
+  font-size: 22px;
+
+  margin-top: 0;
+
+}
+
+.option {
+
+  display: block;
+
+  padding: 12px;
+
+  margin: 9px 0;
+
+  border: 1px solid #e8caca;
+
+  border-radius: 10px;
+
+  cursor: pointer;
+
+  line-height: 1.7;
+
+}
+
+.option:has(input:checked) {
+
+  border: 2px solid #d77b85;
+
+  background: #fff5f5;
+
+}
+
+.option input {
+
+  margin-right: 8px;
+
+  accent-color: #d77b85;
+
+}
+
+textarea {
+
+  width: 100%;
+
+  min-height: 90px;
+
+  margin-top: 10px;
+
+  padding: 10px;
+
+  border: 1px solid #d9baba;
+
+  border-radius: 10px;
+
+  font-size: 16px;
+
+  resize: vertical;
+
+  font-family: inherit;
+
+}
+
+.confirm {
+
+  background: #d77b85;
+
+  color: white;
+
+}
+
+.cancel {
+
+  background: #eee;
+
+  color: #555;
+
+}
+
+#message {
+
+  margin-top: 18px;
+
+  font-size: 16px;
+
+  min-height: 24px;
+
+  line-height: 1.5;
+
+  overflow-wrap: anywhere;
+
+}
+
+</style>
+
+</head>
+
+<body>
+
+<div class="container">
+
+  <img src="logo.jpeg" class="logo" alt="雞蛋糕小姐 Logo">
+
+  <h1>雞蛋糕小姐<br>訂單開關</h1>
+
+  <button class="open" onclick="openOrders()">
+
+    開放訂餐
+
+  </button>
+
+  <button class="close" onclick="showModal()">
+
+    關閉訂餐
+
+  </button>
+
+  <div id="message"></div>
+
+</div>
+
+<div class="modal" id="modal">
+
+  <div class="modal-box">
+
+    <h2>選擇關閉公告</h2>
+
+    <label class="option">
+
+      <input type="radio" name="notice" value="1">
+
+      🌹今日公休🌹<br>
+
+      暫停線上訂餐<br>
+
+      歡迎其他營業日再來訂購
+
+    </label>
+
+    <label class="option">
+
+      <input type="radio" name="notice" value="2">
+
+      我們下班啦<br>
+
+      歡迎明天再來訂購❤️
+
+    </label>
+
+    <label class="option">
+
+      <input type="radio" name="notice" value="3">
+
+      今日沒有營業<br>
+
+      暫停線上訂餐<br>
+
+      🙏如有不便之處，敬請見諒🙏
+
+    </label>
+
+    <label class="option">
+
+      <input type="radio" name="notice" value="4">
+
+      網頁更新中<br>
+
+      暫停開放訂餐
+
+    </label>
+
+    <label class="option">
+
+      <input type="radio" name="notice" value="custom">
+
+      自訂公告
+    </label>
+
+    <textarea
+
+      id="customText"
+
+      placeholder="輸入自訂公告"
+
+      maxlength="500"
+
+    ></textarea>
+
+    <button class="confirm" onclick="closeOrders()">
+
+      確認關閉
+
+    </button>
+
+    <button class="cancel" onclick="hideModal()">
+
+      取消
+
+    </button>
+
+  </div>
+
+</div>
+
+<script>
+
+const SUPABASE_URL =
+
+  "https://eqtrqgarufochsjptchp.supabase.co";
+
+// 請填入 Supabase 的 anon public key
+
+const SUPABASE_ANON_KEY = "sb_publishable_PLdJLY-MWvoIa9dSTbs8QA_bLDXkeSy";
+
+const FUNCTION_URL =
+
+  SUPABASE_URL + "/functions/v1/order-control";
+
+const notices = {
+
+  "1": "🌹今日公休🌹\n暫停線上訂餐\n歡迎其他營業日再來訂購",
+
+  "2": "我們下班啦\n歡迎明天再來訂購❤️",
+
+  "3": "今日沒有營業\n暫停線上訂餐\n🙏如有不便之處，敬請見諒🙏",
+
+  "4": "網頁更新中\n暫停開放訂餐"
+
+};
+
+async function sendAction(action, closedMessage = "") {
+
+  const message = document.getElementById("message");
+
+  const buttons = document.querySelectorAll("button");
+
+  buttons.forEach(button => {
+
+    button.disabled = true;
+
+  });
+
+  message.textContent = "處理中，請稍候……";
+
+  try {
+
+    const response = await fetch(FUNCTION_URL, {
+
+      method: "POST",
+
+      headers: {
+
+        "Content-Type": "application/json",
+
+        "apikey": SUPABASE_ANON_KEY,
+
+        "Authorization": "Bearer " + SUPABASE_ANON_KEY
+
+      },
+
+      body: JSON.stringify({
+
+        action: action,
+
+        closed_message: closedMessage
+
+      })
+
+    });
+
+    const result = await response.json();
+
+    if (!response.ok || !result.success) {
+
+      throw new Error(result.error || "操作失敗");
+
+    }
+
+    message.textContent = result.message;
+
+    return true;
+
+  } catch (error) {
+
+    message.textContent = "操作失敗：" + error.message;
+
+    return false;
+
+  } finally {
+
+    buttons.forEach(button => {
+
+      button.disabled = false;
+
+    });
+
+  }
+
+}
+
+async function openOrders() {
+
+  await sendAction("open");
+
+}
+
+function showModal() {
+
+  document.getElementById("modal").style.display = "flex";
+
+}
+
+function hideModal() {
+
+  document.getElementById("modal").style.display = "none";
+
+}
+
+async function closeOrders() {
+
+  const selected = document.querySelector(
+
+    'input[name="notice"]:checked'
+
+  );
+
+  if (!selected) {
+
+    alert("請先選擇公告");
+
+    return;
+
+  }
+
+  let notice;
+
+  if (selected.value === "custom") {
+
+    notice = document.getElementById("customText").value.trim();
+
+    if (!notice) {
+
+      alert("請輸入自訂公告");
+
+      return;
+
+    }
+
+  } else {
+
+    notice = notices[selected.value];
+
+  }
+
+  const success = await sendAction("close", notice);
+
+  if (success) {
+
+    hideModal();
+
+    document.querySelectorAll('input[name="notice"]')
+
+      .forEach(input => {
+
+        input.checked = false;
+
+      });
+
+    document.getElementById("customText").value = "";
+
+  }
+
+}
+
+</script>
+
+</body>
+
+</html>
