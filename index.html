@@ -114,6 +114,14 @@ h1 {
 
 }
 
+.main-button:disabled {
+
+    background: #c9b5ad;
+
+    cursor: not-allowed;
+
+}
+
 .back-button {
 
     border: none;
@@ -254,9 +262,7 @@ h1 {
 
 }
 
-input,
-
-textarea {
+input, textarea {
 
     width: 100%;
 
@@ -323,6 +329,7 @@ textarea {
     padding: 8px 0;
 
     border-bottom: 1px solid #f1e4df;
+
 }
 
 .summary-total {
@@ -367,12 +374,25 @@ textarea {
 
     line-height: 1.8;
 
+    white-space: pre-line;
+
     box-shadow: 0 2px 8px rgba(120,80,50,0.08);
 
 }
 
-</style>
+.status {
 
+    text-align: center;
+
+    margin: 0 0 18px;
+
+    font-size: 16px;
+
+    color: #8b6a58;
+
+}
+
+</style>
 </head>
 
 <body>
@@ -387,19 +407,13 @@ textarea {
 
         <h1>雞蛋糕小姐</h1>
 
-        <div class="subtitle">
+        <div class="subtitle">線上訂餐</div>
 
-            線上訂餐
+        <div id="status" class="status">正在確認接單狀態⋯</div>
 
-        </div>
+        <div id="openContent" style="display:none;">
 
-        <div id="openContent">
-
-            <div class="choose">
-
-                請選擇取餐店家
-
-            </div>
+            <div class="choose">請選擇取餐店家</div>
 
             <button id="jiuruStoreButton" class="store-button" type="button">
 
@@ -417,19 +431,7 @@ textarea {
 
         <div id="closedContent" style="display:none;">
 
-            <div class="closed">
-
-                🌷 今日公休 🌷
-
-                <br>
-
-                星期一暫停線上訂餐
-
-                <br>
-
-                歡迎其他營業日再來訂購！
-
-            </div>
+            <div id="closedMessage" class="closed"></div>
 
         </div>
 
@@ -483,11 +485,7 @@ textarea {
 
         <div class="section">
 
-            <div class="section-title">
-
-                🏪 取餐店家
-
-            </div>
+            <div class="section-title">🏪 取餐店家</div>
 
             <div id="orderStore"></div>
 
@@ -495,17 +493,9 @@ textarea {
 
         <div class="section">
 
-            <div class="section-title">
+            <div class="section-title">📱 電話號碼</div>
 
-                📱 電話號碼
-
-            </div>
-
-            <input
-
-                type="tel"
-
-                id="phone"
+            <input type="tel" id="phone"
 
                 placeholder="請輸入完整電話號碼"
 
@@ -513,61 +503,33 @@ textarea {
 
                 inputmode="numeric"
 
-                autocomplete="tel"
+                autocomplete="tel">
 
-            >
-
-            <div class="phone-hint">
-
-                方便之後聯絡
-
-            </div>
+            <div class="phone-hint">方便之後聯絡</div>
 
         </div>
 
         <div class="section">
 
-            <div class="section-title">
+            <div class="section-title">⏰ 取餐時間</div>
 
-                ⏰ 取餐時間
-
-            </div>
-
-            <input
-
-                type="time"
-
-                id="pickupTime"
-
-            >
+            <input type="time" id="pickupTime">
 
         </div>
 
         <div class="section">
 
-            <div class="section-title">
+            <div class="section-title">📝 備註</div>
 
-                📝 備註
+            <textarea id="note"
 
-            </div>
-
-            <textarea
-
-                id="note"
-
-                placeholder="有其他需求可以寫在這裡（選填）"
-
-            ></textarea>
+                placeholder="有其他需求可以寫在這裡（選填）"></textarea>
 
         </div>
 
         <div class="section">
 
-            <div class="section-title">
-
-                🛒 訂購內容
-
-            </div>
+            <div class="section-title">🛒 訂購內容</div>
 
             <div id="orderSummary"></div>
 
@@ -608,6 +570,16 @@ textarea {
 </div>
 
 <script>
+
+const SUPABASE_URL =
+
+    "https://eqtrqgarufochsjptchp.supabase.co";
+
+const SUPABASE_ANON_KEY = "請填入你的 anon key";
+
+const ORDER_FUNCTION_URL =
+
+    SUPABASE_URL + "/functions/v1/sond-line-order";
 
 const menu = [
 
@@ -653,39 +625,149 @@ let currentStore = "";
 
 let quantities = [];
 
-/* 星期一暫停訂餐 */
+let orderingOpen = false;
 
-function checkOpeningDay() {
+let closedMessage = "今日暫停接單";
 
-    const taiwanTime = new Date(
+let checkingStatus = false;
 
-        new Date().toLocaleString("en-US", {
+async function loadOrderStatus() {
 
-            timeZone: "Asia/Taipei"
+    if (checkingStatus) return;
 
-        })
+    checkingStatus = true;
 
-    );
+    const status = document.getElementById("status");
 
-    const isMonday = taiwanTime.getDay() === 1;
+    const openContent = document.getElementById("openContent");
 
-    document.getElementById("openContent").style.display =
+    const closedContent = document.getElementById("closedContent");
 
-        isMonday ? "none" : "block";
+    status.innerText = "正在確認接單狀態⋯";
 
-    document.getElementById("closedContent").style.display =
+    openContent.style.display = "none";
 
-        isMonday ? "block" : "none";
+    closedContent.style.display = "none";
+
+    try {
+
+        const response = await fetch(
+
+            SUPABASE_URL + "/rest/v1/order_settings?id=eq.1&select=is_open,closed_message",
+
+            {
+
+                method: "GET",
+
+                headers: {
+
+                    "apikey": SUPABASE_ANON_KEY,
+
+                    "Authorization": "Bearer " + SUPABASE_ANON_KEY
+
+                },
+
+                cache: "no-store"
+
+            }
+
+        );
+
+        if (!response.ok) {
+
+            throw new Error("無法取得接單狀態");
+
+        }
+
+        const rows = await response.json();
+
+        if (!rows || rows.length === 0) {
+
+            throw new Error("找不到接單設定");
+
+        }
+
+        orderingOpen = rows[0].is_open === true;
+
+        closedMessage = rows[0].closed_message || "今日暫停接單";
+
+        if (orderingOpen) {
+
+            status.innerText = "🟢 目前開放訂餐";
+
+            openContent.style.display = "block";
+
+           closedContent.style.display = "none";
+
+        } else {
+
+            status.innerText = "🔴 目前暫停訂餐";
+
+            openContent.style.display = "none";
+
+            closedContent.style.display = "block";
+
+            document.getElementById("closedMessage").innerText =
+
+                closedMessage;
+
+        }
+
+        if (!orderingOpen) {
+
+            if (document.getElementById("menuPage").style.display !== "none" ||
+
+                document.getElementById("orderPage").style.display !== "none") {
+
+                showHome();
+
+            }
+
+        }
+
+    } catch (error) {
+
+        console.error(error);
+
+        orderingOpen = false;
+
+        status.innerText = "目前無法確認接單狀態";
+
+        openContent.style.display = "none";
+
+        closedContent.style.display = "block";
+
+        document.getElementById("closedMessage").innerText =
+
+            "目前無法確認是否開放訂餐，請稍後再試。";
+
+    } finally {
+
+        checkingStatus = false;
+
+    }
 
 }
 
-checkOpeningDay();
+function showHome() {
+
+    document.getElementById("homePage").style.display = "block";
+
+    document.getElementById("menuPage").style.display = "none";
+
+    document.getElementById("orderPage").style.display = "none";
+
+    window.scrollTo(0, 0);
+
+}
 
 function openStore(store) {
 
-    if (!isOrderingOpen()) {
+    if (!orderingOpen) {
 
-        alert("星期一公休，暫停線上訂餐！");
+        alert("目前暫停訂餐！");
+
+        loadOrderStatus();
 
         return;
 
@@ -699,29 +781,11 @@ function openStore(store) {
 
     document.getElementById("menuPage").style.display = "block";
 
-    document.getElementById("storeTitle").innerText =
-
-        store + "｜菜單";
+    document.getElementById("storeTitle").innerText = store + "｜菜單";
 
     showProducts();
 
     window.scrollTo(0, 0);
-
-}
-
-function isOrderingOpen() {
-
-    const taiwanTime = new Date(
-
-        new Date().toLocaleString("en-US", {
-
-            timeZone: "Asia/Taipei"
-
-        })
-
-    );
-
-    return taiwanTime.getDay() !== 1;
 
 }
 
@@ -749,19 +813,11 @@ function showProducts() {
 
             <div class="quantity">
 
-                <button type="button"
-
-                    data-index="${index}"
-
-                    data-change="-1">−</button>
+                <button type="button" data-index="${index}" data-change="-1">−</button>
 
                 <span class="number">${quantities[index]}</span>
 
-                <button type="button"
-
-                    data-index="${index}"
-
-                    data-change="1">+</button>
+                <button type="button" data-index="${index}" data-change="1">+</button>
 
             </div>
 
@@ -777,13 +833,19 @@ function showProducts() {
 
 function changeQuantity(index, change) {
 
-    quantities[index] += change;
+    if (!orderingOpen) {
 
-    if (quantities[index] < 0) {
+        alert("目前暫停訂餐！");
 
-        quantities[index] = 0;
+        loadOrderStatus();
+
+        return;
 
     }
+
+    quantities[index] += change;
+
+    if (quantities[index] < 0) quantities[index] = 0;
 
     showProducts();
 
@@ -805,13 +867,21 @@ function getTotal() {
 
 function updateTotal() {
 
-    document.getElementById("total").innerText =
-
-        getTotal();
+    document.getElementById("total").innerText = getTotal();
 
 }
 
-function goToOrder() {
+async function goToOrder() {
+
+    await loadOrderStatus();
+
+    if (!orderingOpen) {
+
+        alert("目前暫停訂餐！");
+
+        return;
+
+    }
 
     if (getTotal() === 0) {
 
@@ -821,27 +891,13 @@ function goToOrder() {
 
     }
 
-    if (!isOrderingOpen()) {
-
-        alert("星期一公休，暫停線上訂餐！");
-
-        backHome();
-
-        return;
-
-    }
-
     document.getElementById("menuPage").style.display = "none";
 
     document.getElementById("orderPage").style.display = "block";
 
-    document.getElementById("orderStore").innerText =
+    document.getElementById("orderStore").innerText = currentStore;
 
-        currentStore;
-
-    document.getElementById("orderTotal").innerText =
-
-        getTotal();
+    document.getElementById("orderTotal").innerText = getTotal();
 
     createOrderSummary();
 
@@ -851,7 +907,8 @@ function goToOrder() {
 
 function createOrderSummary() {
 
-    const summary = document.getElementById("orderSummary");
+    const summary =
+        document.getElementById("orderSummary");
 
     summary.innerHTML = "";
 
@@ -865,15 +922,9 @@ function createOrderSummary() {
 
             div.innerText =
 
-                item[0] +
+                item[0] + " × " + quantities[index] +
 
-                " × " +
-
-                quantities[index] +
-
-                "　$" +
-
-                (item[1] * quantities[index]);
+                "　$" + (item[1] * quantities[index]);
 
             summary.appendChild(div);
 
@@ -885,27 +936,27 @@ function createOrderSummary() {
 
 async function confirmOrder() {
 
-    if (!isOrderingOpen()) {
+    const button = document.getElementById("confirmOrderButton");
 
-        alert("星期一公休，暫停線上訂餐！");
+    if (button.disabled) return;
 
-        backHome();
+    await loadOrderStatus();
+
+    if (!orderingOpen) {
+
+        alert("目前暫停訂餐！");
+
+        showHome();
 
         return;
 
     }
 
-    const phone =
+    const phone = document.getElementById("phone").value.trim();
 
-        document.getElementById("phone").value.trim();
+    const time = document.getElementById("pickupTime").value;
 
-    const time =
-
-        document.getElementById("pickupTime").value;
-
-    const note =
-
-        document.getElementById("note").value.trim();
+    const note = document.getElementById("note").value.trim();
 
     if (!/^09[0-9]{8}$/.test(phone)) {
 
@@ -920,6 +971,7 @@ async function confirmOrder() {
         alert("請選擇取餐時間！");
 
         return;
+
     }
 
     const orderItems = [];
@@ -930,15 +982,9 @@ async function confirmOrder() {
 
             orderItems.push(
 
-                item[0] +
+                item[0] + " × " + quantities[index] +
 
-                " × " +
-
-                quantities[index] +
-
-                "　$" +
-
-                (item[1] * quantities[index])
+                "　$" + (item[1] * quantities[index])
 
             );
 
@@ -962,27 +1008,25 @@ async function confirmOrder() {
 
     };
 
+    button.disabled = true;
+
+    button.innerText = "訂單送出中⋯";
+
     try {
 
-        const response = await fetch(
+        const response = await fetch(ORDER_FUNCTION_URL, {
 
-            "https://eqtrqgarufochsjptchp.supabase.co/functions/v1/sond-line-order",
+            method: "POST",
 
-            {
+            headers: {
 
-                method: "POST",
+                "Content-Type": "application/json"
 
-                headers: {
+            },
 
-                    "Content-Type": "application/json"
+            body: JSON.stringify(orderData)
 
-                },
-
-                body: JSON.stringify(orderData)
-
-            }
-
-        );
+        });
 
         if (!response.ok) {
 
@@ -1002,13 +1046,17 @@ async function confirmOrder() {
 
         window.scrollTo(0, 0);
 
-    }
-
-    catch (error) {
+    } catch (error) {
 
         console.error(error);
 
         alert("目前無法連線到訂單系統，請稍後再試！");
+
+    } finally {
+
+        button.disabled = false;
+
+        button.innerText = "送出訂單";
 
     }
 
@@ -1016,11 +1064,7 @@ async function confirmOrder() {
 
 function backHome() {
 
-    document.getElementById("menuPage").style.display = "none";
-
-    document.getElementById("homePage").style.display = "block";
-
-    window.scrollTo(0, 0);
+    showHome();
 
 }
 
@@ -1038,19 +1082,11 @@ function backToMenu() {
 
 document.getElementById("jiuruStoreButton")
 
-    .addEventListener("click", function () {
-
-        openStore("九如店");
-
-    });
+    .addEventListener("click", () => openStore("九如店"));
 
 document.getElementById("fanhuaStoreButton")
 
-    .addEventListener("click", function () {
-
-        openStore("繁華店");
-
-    });
+    .addEventListener("click", () => openStore("繁華店"));
 
 document.getElementById("backHomeButton")
 
@@ -1068,31 +1104,19 @@ document.getElementById("confirmOrderButton")
 
     .addEventListener("click", confirmOrder);
 
-/* 菜單加減按鈕 */
-
 document.getElementById("products")
 
-    .addEventListener("click", function (event) {
+    .addEventListener("click", event => {
 
         const button = event.target.closest("button");
 
-        if (!button) {
-
-            return;
-
-        }
+        if (!button) return;
 
         const index = Number(button.dataset.index);
 
         const change = Number(button.dataset.change);
 
-        if (
-
-            Number.isInteger(index) &&
-
-            Number.isInteger(change)
-
-        ) {
+        if (Number.isInteger(index) && Number.isInteger(change)) {
 
             changeQuantity(index, change);
 
@@ -1100,7 +1124,13 @@ document.getElementById("products")
 
     });
 
-</script>
+/* 進入網站時讀取，並定期更新 */
+
+loadOrderStatus();
+
+setInterval(loadOrderStatus, 10000);
+
+    </script>
 
 </body>
 
